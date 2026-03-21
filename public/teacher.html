@@ -410,7 +410,12 @@ function resetTeacher(){
 
 function stopStream(){S.stream?.getTracks().forEach(t=>t.stop()); S.stream=null;}
 
-document.addEventListener('keydown',e=>{
+// Phone remote trigger
+socket.on("capture:trigger", ({ lectureId }) => {
+  if (lectureId === S.lectureId) captureSlide();
+});
+
+document.addEventListener("keydown",e=>{
   if(e.code==='Space' && S.lectureId){e.preventDefault();captureSlide();}
 });
 </script>

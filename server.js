@@ -21,7 +21,6 @@ app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
-// ── Multer ────────────────────────────────────────────────
 const storage = multer.diskStorage({
   destination: (_, __, cb) => {
     const dir = 'uploads/lectures';
@@ -32,12 +31,9 @@ const storage = multer.diskStorage({
 });
 const upload = multer({ storage, limits: { fileSize: 150 * 1024 * 1024 } });
 
-// active lectures in memory: id → { startTime, slideCount }
 const active = {};
 
-// ══════════════════════════════════════════════════════════
-//  AUTH
-// ══════════════════════════════════════════════════════════
+// AUTH
 app.post('/api/auth/login', async (req, res) => {
   const { email, password } = req.body;
   if (!email || !password) return res.status(400).json({ error: 'Email aur password chahiye' });
@@ -74,11 +70,7 @@ app.post('/api/auth/register', async (req, res) => {
 app.post('/api/auth/logout', (_, res) => res.clearCookie('token').json({ success: true }));
 app.get('/api/auth/me', authMiddleware, (req, res) => res.json({ user: req.user }));
 
-// ══════════════════════════════════════════════════════════
-//  LECTURES
-// ══════════════════════════════════════════════════════════
-
-// Teacher: start
+// LECTURES
 app.post('/api/lecture/start', authMiddleware, requireRole('teacher'), async (req, res) => {
   const { title, subject, class_name } = req.body;
   if (!title || !subject || !class_name) return res.status(400).json({ error: 'Title, subject, class chahiye' });
@@ -96,7 +88,6 @@ app.post('/api/lecture/start', authMiddleware, requireRole('teacher'), async (re
   } catch (e) { console.error(e); res.status(500).json({ error: 'Server error' }); }
 });
 
-// Teacher: slide count update
 app.post('/api/lecture/slide', authMiddleware, requireRole('teacher'), (req, res) => {
   const { lectureId, slideNumber } = req.body;
   if (active[lectureId]) active[lectureId].slideCount = slideNumber;
@@ -104,7 +95,14 @@ app.post('/api/lecture/slide', authMiddleware, requireRole('teacher'), (req, res
   res.json({ success: true });
 });
 
-// Teacher: end + PDF upload
+// Phone remote trigger — tells smartboard to capture
+app.post('/api/lecture/trigger-capture', authMiddleware, requireRole('teacher'), (req, res) => {
+  const { lectureId } = req.body;
+  if (!lectureId) return res.status(400).json({ error: 'lectureId required' });
+  io.emit('capture:trigger', { lectureId });
+  res.json({ success: true });
+});
+
 app.post('/api/lecture/end', authMiddleware, requireRole('teacher'), upload.single('pdf'), async (req, res) => {
   const { lectureId } = req.body;
   const a = active[lectureId];
@@ -112,14 +110,12 @@ app.post('/api/lecture/end', authMiddleware, requireRole('teacher'), upload.sing
     const mins = a ? Math.floor((Date.now() - a.startTime) / 60000) : 0;
     const slides = a?.slideCount || 0;
     const pdfPath = req.file ? `/uploads/lectures/${req.file.filename}` : null;
-
     const { rows } = await pool.query(
       `UPDATE lectures SET status='completed', pdf_path=$1, slide_count=$2, duration_min=$3
        WHERE id=$4 AND teacher_id=$5 RETURNING *`,
       [pdfPath, slides, mins, lectureId, req.user.id]
     );
     if (!rows[0]) return res.status(404).json({ error: 'Lecture nahi mili' });
-
     delete active[lectureId];
     io.emit('lecture:ended', { lectureId, pdfPath, slideCount: slides, durationMin: mins, subject: rows[0].subject, class_name: rows[0].class_name });
     console.log(`[DONE] "${rows[0].title}" — ${mins}min, ${slides} slides`);
@@ -127,25 +123,16 @@ app.post('/api/lecture/end', authMiddleware, requireRole('teacher'), upload.sing
   } catch (e) { console.error(e); res.status(500).json({ error: 'Server error' }); }
 });
 
-// Student: get lectures for their subjects + class
 app.get('/api/lectures', authMiddleware, async (req, res) => {
   try {
     let rows;
     if (req.user.role === 'teacher') {
-      // Teacher sees their own lectures
-      ({ rows } = await pool.query(
-        `SELECT * FROM lectures WHERE teacher_id=$1 ORDER BY created_at DESC`,
-        [req.user.id]
-      ));
+      ({ rows } = await pool.query(`SELECT * FROM lectures WHERE teacher_id=$1 ORDER BY created_at DESC`, [req.user.id]));
     } else {
-      // Student sees lectures matching their subjects OR their class
       const subjects = req.user.subjects || [];
       const className = req.user.class_name || '';
       ({ rows } = await pool.query(
-        `SELECT * FROM lectures
-         WHERE status='completed'
-           AND (class_name=$1 OR subject=ANY($2))
-         ORDER BY created_at DESC`,
+        `SELECT * FROM lectures WHERE status='completed' AND (class_name=$1 OR subject=ANY($2)) ORDER BY created_at DESC`,
         [className, subjects]
       ));
     }
@@ -153,35 +140,31 @@ app.get('/api/lectures', authMiddleware, async (req, res) => {
   } catch (e) { console.error(e); res.status(500).json({ error: 'Server error' }); }
 });
 
-// Active lecture
 app.get('/api/lecture/active', authMiddleware, async (req, res) => {
   try {
-    const { rows } = await pool.query(
-      `SELECT * FROM lectures WHERE status='live' ORDER BY created_at DESC LIMIT 1`
-    );
+    const { rows } = await pool.query(`SELECT * FROM lectures WHERE status='live' ORDER BY created_at DESC LIMIT 1`);
     res.json(rows[0] || null);
   } catch (e) { res.status(500).json({ error: 'Server error' }); }
 });
 
-// ── Pages ─────────────────────────────────────────────────
+// PAGES
 const pub = (f) => path.join(__dirname, 'public', f);
 app.get('/',         (_, r) => r.sendFile(pub('index.html')));
 app.get('/login',    (_, r) => r.sendFile(pub('login.html')));
 app.get('/register', (_, r) => r.sendFile(pub('register.html')));
 app.get('/teacher',  (_, r) => r.sendFile(pub('teacher.html')));
 app.get('/student',  (_, r) => r.sendFile(pub('student.html')));
+app.get('/capture',  (_, r) => r.sendFile(pub('capture.html')));
 
-// ── Socket ────────────────────────────────────────────────
+// SOCKET
 io.on('connection', (s) => {
   console.log(`[WS] ${s.id} connected`);
   s.on('disconnect', () => console.log(`[WS] ${s.id} disconnected`));
 });
 
-// ── Boot ──────────────────────────────────────────────────
 const PORT = process.env.PORT || 3000;
 initDB().then(() => {
   server.listen(PORT, () => {
-    console.log(`\n🚀  http://localhost:${PORT}`);
-    console.log(`    /login  /register  /teacher  /student\n`);
+    console.log(`\n🚀  http://localhost:${PORT}\n`);
   });
 }).catch(e => { console.error('DB failed:', e); process.exit(1); });

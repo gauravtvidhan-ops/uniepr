@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>Capture — UniEPR</title>
+<link rel="stylesheet" href="css/style.css">
+<style>
+*{-webkit-tap-highlight-color:transparent}
+body{display:flex;flex-direction:column;min-height:100vh;overflow:hidden;position:relative}
+
+.orb1{width:300px;height:300px;background:#4f7cff;top:-100px;left:-100px}
+.orb2{width:200px;height:200px;background:#22c55e;bottom:-60px;right:-60px}
+
+.top-bar{
+  padding:16px 20px;
+  display:flex;align-items:center;justify-content:space-between;
+  background:var(--surface);border-bottom:1px solid var(--border);
+  position:relative;z-index:1;
+}
+.top-logo{font-weight:900;font-size:1rem;letter-spacing:-0.5px;background:linear-gradient(135deg,var(--accent),var(--cyan));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.top-user{font-size:.75rem;color:var(--text2);font-family:'JetBrains Mono',monospace}
+
+/* No lecture state */
+#noLecture{
+  flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  text-align:center;padding:32px;position:relative;z-index:1;
+}
+#noLecture .nl-icon{font-size:4rem;margin-bottom:20px;opacity:.4}
+#noLecture h2{font-size:1.2rem;font-weight:800;margin-bottom:8px}
+#noLecture p{font-size:.875rem;color:var(--text2);line-height:1.6;margin-bottom:24px}
+
+/* Lecture active state */
+#lectureActive{
+  flex:1;display:none;flex-direction:column;
+  align-items:center;justify-content:space-between;
+  padding:24px 20px;position:relative;z-index:1;
+}
+
+.lecture-title{
+  text-align:center;
+  font-size:1rem;font-weight:800;
+  color:var(--text);margin-bottom:4px;
+}
+.lecture-meta{
+  font-size:.75rem;color:var(--text2);
+  font-family:'JetBrains Mono',monospace;
+  text-align:center;
+}
+
+.live-badge-wrap{margin:8px 0}
+
+/* Timer */
+.big-timer{
+  font-family:'JetBrains Mono',monospace;
+  font-size:3rem;font-weight:500;
+  color:var(--red);letter-spacing:3px;
+  text-align:center;
+  background:var(--red-dim);
+  border:1px solid rgba(239,68,68,.15);
+  border-radius:16px;
+  padding:16px 24px;
+  width:100%;
+}
+
+/* Stats */
+.stats-row{
+  display:flex;gap:12px;width:100%;
+}
+.stat-box{
+  flex:1;background:var(--surface);border:1px solid var(--border2);
+  border-radius:14px;padding:14px;text-align:center;
+}
+.stat-box .v{font-family:'JetBrains Mono',monospace;font-size:1.8rem;font-weight:700;color:var(--accent)}
+.stat-box .l{font-size:.65rem;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;margin-top:4px}
+
+/* BIG CAPTURE BUTTON */
+.capture-wrap{width:100%;position:relative}
+
+.btn-capture-big{
+  width:100%;
+  padding:28px;
+  background:var(--accent);
+  border:none;border-radius:24px;
+  font-family:'Cabinet Grotesk',sans-serif;
+  font-size:1.4rem;font-weight:900;
+  color:#fff;cursor:pointer;
+  transition:all .15s;
+  display:flex;align-items:center;justify-content:center;gap:12px;
+  letter-spacing:.3px;
+  box-shadow:0 8px 32px rgba(79,124,255,.4);
+  -webkit-user-select:none;user-select:none;
+}
+.btn-capture-big:active{transform:scale(.95);box-shadow:0 4px 16px rgba(79,124,255,.3)}
+.btn-capture-big.success{background:var(--green);box-shadow:0 8px 32px rgba(34,197,94,.4)}
+.btn-capture-big .ic{font-size:1.8rem}
+
+/* Ripple */
+@keyframes ripple{
+  0%{transform:scale(0);opacity:.6}
+  100%{transform:scale(4);opacity:0}
+}
+.ripple{
+  position:absolute;
+  border-radius:50%;
+  background:rgba(255,255,255,.3);
+  width:80px;height:80px;
+  margin-top:-40px;margin-left:-40px;
+  pointer-events:none;
+  animation:ripple .6s ease-out forwards;
+}
+
+/* End button */
+.btn-end-lecture{
+  width:100%;padding:16px;
+  background:transparent;
+  border:1px solid rgba(239,68,68,.3);
+  border-radius:14px;
+  font-family:'Cabinet Grotesk',sans-serif;
+  font-size:.9rem;font-weight:700;
+  color:var(--red);cursor:pointer;
+  transition:all .2s;
+}
+.btn-end-lecture:active{background:var(--red-dim)}
+
+/* Last capture feedback */
+.last-capture{
+  font-size:.75rem;color:var(--text3);
+  font-family:'JetBrains Mono',monospace;
+  text-align:center;min-height:20px;
+}
+
+/* Slide preview strip */
+.slide-count-indicator{
+  display:flex;gap:4px;flex-wrap:wrap;justify-content:center;
+  max-height:40px;overflow:hidden;
+}
+.slide-dot{
+  width:8px;height:8px;border-radius:50%;
+  background:var(--accent);opacity:.5;
+}
+.slide-dot.latest{opacity:1;background:var(--green)}
+</style>
+</head>
+<body>
+<div class="orb orb1"></div>
+<div class="orb orb2"></div>
+
+<div class="top-bar">
+  <span class="top-logo">UniEPR</span>
+  <span class="top-user" id="topUser">Loading...</span>
+</div>
+
+<!-- No lecture -->
+<div id="noLecture">
+  <div class="nl-icon">📡</div>
+  <h2>Koi lecture live nahi</h2>
+  <p>Pehle smartboard pe UniEPR kholo aur lecture shuru karo. Phir yeh page refresh karo.</p>
+  <button class="btn btn-primary" onclick="checkActive()">🔄 Check Karo</button>
+  <p style="margin-top:16px;font-size:.75rem;color:var(--text3)">Yeh page same WiFi pe hona chahiye smartboard ke saath</p>
+</div>
+
+<!-- Lecture Active -->
+<div id="lectureActive">
+  <div style="width:100%;display:flex;flex-direction:column;gap:12px;align-items:center">
+    <div class="live-badge-wrap">
+      <span class="badge badge-live"><span class="dot"></span>LIVE LECTURE</span>
+    </div>
+    <div class="lecture-title" id="lecTitle">—</div>
+    <div class="lecture-meta" id="lecMeta">—</div>
+  </div>
+
+  <div style="width:100%;display:flex;flex-direction:column;gap:12px">
+    <div class="big-timer" id="bigTimer">00:00:00</div>
+
+    <div class="stats-row">
+      <div class="stat-box">
+        <div class="v" id="slideCountBig">0</div>
+        <div class="l">Slides</div>
+      </div>
+      <div class="stat-box">
+        <div class="v" style="color:var(--green);font-size:1.2rem" id="statusVal">Live ✓</div>
+        <div class="l">Status</div>
+      </div>
+    </div>
+
+    <!-- Slide dots -->
+    <div class="slide-count-indicator" id="slideDots"></div>
+  </div>
+
+  <div style="width:100%;display:flex;flex-direction:column;gap:12px">
+    <div class="last-capture" id="lastCapture">Capture button dabao jab slide complete ho</div>
+
+    <div class="capture-wrap">
+      <button class="btn-capture-big" id="captureBtn" onclick="triggerCapture(event)">
+        <span class="ic">📸</span>
+        <span id="captureBtnText">Capture Slide</span>
+      </button>
+    </div>
+
+    <button class="btn-end-lecture" onclick="confirmEnd()">🔴 Lecture Khatam Karo</button>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script src="/socket.io/socket.io.js"></script>
+<script src="js/utils.js"></script>
+<script>
+let user = null;
+let lectureId = null;
+let slideCount = 0;
+let startTime = null;
+let timerInterval = null;
+const socket = io();
+
+(async () => {
+  user = await requireAuth('teacher');
+  if (!user) return;
+  document.getElementById('topUser').textContent = user.name;
+  await checkActive();
+})();
+
+async function checkActive() {
+  try {
+    const lec = await api('GET', '/api/lecture/active');
+    if (lec) {
+      showLecture(lec);
+    } else {
+      document.getElementById('noLecture').style.display = 'flex';
+      document.getElementById('lectureActive').style.display = 'none';
+    }
+  } catch(e) {
+    toast('Server se connect nahi ho pa raha', 'error');
+  }
+}
+
+function showLecture(lec) {
+  lectureId = lec.id;
+  startTime = new Date(lec.created_at).getTime();
+
+  document.getElementById('noLecture').style.display = 'none';
+  document.getElementById('lectureActive').style.display = 'flex';
+  document.getElementById('lecTitle').textContent = lec.title;
+  document.getElementById('lecMeta').textContent = `${lec.subject} · ${lec.class_name} · ${lec.teacher_name}`;
+
+  // Start timer
+  if (timerInterval) clearInterval(timerInterval);
+  timerInterval = setInterval(() => {
+    const e = Date.now() - startTime;
+    const h=Math.floor(e/3600000), m=Math.floor((e%3600000)/60000), s=Math.floor((e%60000)/1000);
+    document.getElementById('bigTimer').textContent = `${pad(h)}:${pad(m)}:${pad(s)}`;
+  }, 1000);
+}
+
+function pad(n) { return String(n).padStart(2,'0'); }
+
+async function triggerCapture(e) {
+  if (!lectureId) { toast('Koi lecture live nahi', 'error'); return; }
+
+  // Ripple effect
+  const btn = document.getElementById('captureBtn');
+  const rect = btn.getBoundingClientRect();
+  const ripple = document.createElement('div');
+  ripple.className = 'ripple';
+  ripple.style.top = (e.clientY - rect.top) + 'px';
+  ripple.style.left = (e.clientX - rect.left) + 'px';
+  btn.appendChild(ripple);
+  setTimeout(() => ripple.remove(), 600);
+
+  // Button feedback
+  btn.classList.add('success');
+  document.getElementById('captureBtnText').textContent = '✓ Captured!';
+  setTimeout(() => {
+    btn.classList.remove('success');
+    document.getElementById('captureBtnText').textContent = 'Capture Slide';
+  }, 1000);
+
+  try {
+    await api('POST', '/api/lecture/trigger-capture', { lectureId });
+    slideCount++;
+    document.getElementById('slideCountBig').textContent = slideCount;
+    document.getElementById('lastCapture').textContent = `Slide ${slideCount} — ${new Date().toLocaleTimeString('en-IN', {hour:'2-digit',minute:'2-digit',second:'2-digit'})}`;
+    updateDots();
+    toast(`Slide ${slideCount} capture ho gayi!`, 'success');
+  } catch(err) {
+    toast('Capture fail: ' + err.message, 'error');
+  }
+}
+
+function updateDots() {
+  const wrap = document.getElementById('slideDots');
+  wrap.innerHTML = '';
+  for (let i = 0; i < Math.min(slideCount, 30); i++) {
+    const d = document.createElement('div');
+    d.className = 'slide-dot' + (i === slideCount-1 ? ' latest' : '');
+    wrap.appendChild(d);
+  }
+  if (slideCount > 30) {
+    wrap.innerHTML += `<span style="font-size:.65rem;color:var(--text3);font-family:'JetBrains Mono',monospace">+${slideCount-30}</span>`;
+  }
+}
+
+function confirmEnd() {
+  if (confirm(`${slideCount} slides hain. Lecture khatam karein aur PDF upload karein?`)) {
+    toast('Smartboard pe "End Lecture" dabao — PDF wahan se upload hogi.', 'info');
+  }
+}
+
+// Real-time events
+socket.on('lecture:started', lec => {
+  showLecture(lec);
+  toast(`Lecture shuru: ${lec.title}`, 'info');
+});
+
+socket.on('lecture:ended', () => {
+  clearInterval(timerInterval);
+  document.getElementById('noLecture').style.display = 'flex';
+  document.getElementById('lectureActive').style.display = 'none';
+  lectureId = null; slideCount = 0;
+  toast('Lecture khatam ho gayi!', 'success');
+});
+
+socket.on('lecture:slide', ({ slideNumber }) => {
+  slideCount = slideNumber;
+  document.getElementById('slideCountBig').textContent = slideCount;
+  updateDots();
+});
+</script>
+</body>
+</html>
