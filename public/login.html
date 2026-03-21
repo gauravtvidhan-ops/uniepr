@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Login — UniEPR</title>
+<link rel="stylesheet" href="css/style.css">
+<style>
+body{display:flex;align-items:center;justify-content:center;min-height:100vh;overflow:hidden;position:relative}
+.orb1{width:400px;height:400px;background:#4f7cff;top:-120px;left:-120px}
+.orb2{width:300px;height:300px;background:#7b5ea7;bottom:-80px;right:-80px}
+.card{position:relative;z-index:1;width:400px;max-width:95vw;background:rgba(21,24,32,.92);border:1px solid var(--border2);border-radius:20px;padding:40px;backdrop-filter:blur(20px);box-shadow:var(--shadow-lg)}
+.logo-wrap{text-align:center;margin-bottom:28px}
+.logo{font-weight:900;font-size:2rem;letter-spacing:-1.5px;background:linear-gradient(135deg,var(--accent),var(--cyan));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.logo-sub{font-family:'JetBrains Mono',monospace;font-size:.65rem;letter-spacing:3px;color:var(--text3);text-transform:uppercase;margin-top:4px}
+.role-tabs{display:flex;background:var(--surface2);border-radius:10px;padding:4px;gap:4px;margin-bottom:24px}
+.rtab{flex:1;padding:9px;border:none;border-radius:7px;background:transparent;font-family:'Cabinet Grotesk',sans-serif;font-size:.85rem;font-weight:700;cursor:pointer;color:var(--text3);transition:all .15s}
+.rtab.active{background:var(--surface3);color:var(--text)}
+.demo-box{background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:14px;margin-top:20px;font-size:.78rem;color:var(--text2);line-height:1.8;font-family:'JetBrains Mono',monospace}
+.demo-box strong{color:var(--text)}
+.link-row{text-align:center;margin-top:16px;font-size:.82rem;color:var(--text2)}
+.link-row a{color:var(--accent);text-decoration:none;font-weight:700}
+</style>
+</head>
+<body>
+<div class="orb orb1"></div>
+<div class="orb orb2"></div>
+<div class="card">
+  <div class="logo-wrap">
+    <div class="logo">UniEPR</div>
+    <div class="logo-sub">Lecture Capture System</div>
+  </div>
+  <div class="role-tabs">
+    <button class="rtab" id="tabTeacher" onclick="setRole('teacher')">👩‍🏫 Teacher</button>
+    <button class="rtab" id="tabStudent" onclick="setRole('student')">🎓 Student</button>
+  </div>
+  <div class="field">
+    <label>Email</label>
+    <input type="email" id="email" placeholder="apna email dalein">
+  </div>
+  <div class="field">
+    <label>Password</label>
+    <input type="password" id="password" placeholder="••••••••" onkeydown="if(event.key==='Enter')doLogin()">
+  </div>
+  <div class="err" id="errMsg"></div>
+  <button class="btn btn-primary btn-lg w-full" id="loginBtn" onclick="doLogin()" style="margin-top:8px">Login →</button>
+  <div class="demo-box">
+    <strong>Demo accounts:</strong><br>
+    Teacher → teacher@demo.com / teacher123<br>
+    Student → student@demo.com / student123
+  </div>
+  <div class="link-row">
+    Account nahi hai? <a href="/register">Register karo</a>
+  </div>
+</div>
+<div id="toast"></div>
+<script src="js/utils.js"></script>
+<script>
+let role = new URLSearchParams(location.search).get('role') || 'teacher';
+setRole(role);
+
+function setRole(r) {
+  role = r;
+  document.getElementById('tabTeacher').classList.toggle('active', r==='teacher');
+  document.getElementById('tabStudent').classList.toggle('active', r==='student');
+}
+
+async function doLogin() {
+  const email    = document.getElementById('email').value.trim();
+  const password = document.getElementById('password').value;
+  const err      = document.getElementById('errMsg');
+  const btn      = document.getElementById('loginBtn');
+  err.classList.remove('show');
+  if (!email || !password) { err.textContent='Email aur password dalein'; err.classList.add('show'); return; }
+  btn.disabled = true; btn.textContent = 'Login ho raha hai...';
+  try {
+    const { user } = await api('POST', '/api/auth/login', { email, password });
+    if (user.role !== role) {
+      err.textContent = `Yeh account ${user.role} ka hai, ${role} ka nahi`;
+      err.classList.add('show');
+      btn.disabled=false; btn.textContent='Login →'; return;
+    }
+    toast('Login successful! Redirect ho raha hai...', 'success');
+    setTimeout(() => { window.location.href = user.role==='teacher' ? '/teacher' : '/student'; }, 800);
+  } catch(e) {
+    err.textContent = e.message;
+    err.classList.add('show');
+    btn.disabled=false; btn.textContent='Login →';
+  }
+}
+</script>
+</body>
+</html>

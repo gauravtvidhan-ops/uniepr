@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>UniEPR — Lecture System</title>
+<link rel="stylesheet" href="css/style.css">
+<style>
+body{display:flex;align-items:center;justify-content:center;min-height:100vh;overflow:hidden;position:relative;}
+.orb1{width:500px;height:500px;background:#4f7cff;top:-150px;left:-150px}
+.orb2{width:400px;height:400px;background:#7b5ea7;bottom:-120px;right:-120px}
+.grid{position:absolute;inset:0;background-image:linear-gradient(rgba(255,255,255,.025) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.025) 1px,transparent 1px);background-size:64px 64px;pointer-events:none}
+.hero{position:relative;z-index:1;text-align:center;max-width:580px;padding:24px}
+.badge-pill{display:inline-flex;align-items:center;gap:8px;background:rgba(79,124,255,.1);border:1px solid rgba(79,124,255,.22);border-radius:20px;padding:6px 16px;font-family:'JetBrains Mono',monospace;font-size:.7rem;letter-spacing:1.5px;color:var(--accent);margin-bottom:24px}
+.live-dot{width:7px;height:7px;border-radius:50%;background:var(--green);animation:blink 2s infinite}
+h1{font-size:clamp(2rem,5vw,3.8rem);font-weight:900;letter-spacing:-2px;line-height:1.05;margin-bottom:16px}
+.grad{background:linear-gradient(135deg,var(--accent),var(--cyan));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.sub{font-size:1rem;color:var(--text2);line-height:1.7;margin-bottom:40px}
+.cards{display:flex;gap:16px;justify-content:center;flex-wrap:wrap}
+.rc{background:var(--surface);border:1px solid var(--border2);border-radius:20px;padding:28px 32px;text-align:center;cursor:pointer;transition:all .25s;text-decoration:none;color:inherit;min-width:170px;position:relative;overflow:hidden}
+.rc::before{content:'';position:absolute;inset:0;background:linear-gradient(135deg,var(--c,var(--accent)),transparent 60%);opacity:0;transition:opacity .25s}
+.rc:hover{border-color:var(--c,var(--accent));transform:translateY(-4px);box-shadow:var(--shadow-lg)}
+.rc:hover::before{opacity:.07}
+.rc .ic{font-size:2.4rem;margin-bottom:12px}
+.rc .tt{font-size:1rem;font-weight:800;margin-bottom:4px}
+.rc .dd{font-size:.78rem;color:var(--text2);line-height:1.5}
+.flow{display:flex;align-items:center;gap:8px;justify-content:center;flex-wrap:wrap;margin-top:32px;font-size:.72rem;color:var(--text3);font-family:'JetBrains Mono',monospace}
+.flow span{color:var(--text2)}.flow .sep{color:var(--border2)}
+</style>
+</head>
+<body>
+<div class="orb orb1"></div>
+<div class="orb orb2"></div>
+<div class="grid"></div>
+<div class="hero">
+  <div class="badge-pill"><div class="live-dot"></div>UNIEPR LECTURE SYSTEM</div>
+  <h1>Board likhao,<br>students ko <span class="grad">PDF milegi</span></h1>
+  <p class="sub">Teacher smartboard pe screen share karta hai · slides capture karta hai · lecture end karta hai · students ko instantly PDF mil jaati hai</p>
+  <div class="cards">
+    <a href="/login?role=teacher" class="rc" style="--c:#f59e0b">
+      <div class="ic">👩‍🏫</div>
+      <div class="tt">Teacher</div>
+      <div class="dd">Login karke lecture shuru karo</div>
+    </a>
+    <a href="/login?role=student" class="rc" style="--c:#22c55e">
+      <div class="ic">🎓</div>
+      <div class="tt">Student</div>
+      <div class="dd">Login karke PDFs download karo</div>
+    </a>
+  </div>
+  <div class="flow">
+    <span>Login</span><span class="sep">→</span>
+    <span>Screen share</span><span class="sep">→</span>
+    <span>Slides capture</span><span class="sep">→</span>
+    <span>End lecture</span><span class="sep">→</span>
+    <span>PDF ready</span>
+  </div>
+</div>
+<div id="toast"></div>
+<script src="js/utils.js"></script>
+<script>
+// If already logged in, redirect
+api('GET','/api/auth/me').then(({user})=>{
+  window.location.href = user.role==='teacher'?'/teacher':'/student';
+}).catch(()=>{});
+</script>
+</body>
+</html>

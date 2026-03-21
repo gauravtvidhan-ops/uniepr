@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Teacher — UniEPR</title>
+<link rel="stylesheet" href="css/style.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<style>
+.page-wrap{max-width:1200px;margin:0 auto;padding:28px 20px}
+.setup-card{max-width:520px;margin:48px auto;background:var(--surface);border:1px solid var(--border2);border-radius:20px;padding:40px;box-shadow:var(--shadow-lg)}
+.setup-card h2{font-size:1.4rem;font-weight:900;margin-bottom:6px}
+.setup-card .sub{color:var(--text2);font-size:.875rem;margin-bottom:28px;line-height:1.6}
+#liveUI{display:none}
+.lecture-grid{display:grid;grid-template-columns:1fr 290px;gap:20px;align-items:start}
+.preview-area{background:var(--surface);border:1px solid var(--border2);border-radius:var(--radius-lg);overflow:hidden}
+.preview-header{padding:14px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
+.preview-header .ph-title{font-weight:800;font-size:.9rem}
+.preview-canvas-wrap{background:#000;min-height:380px;display:flex;align-items:center;justify-content:center}
+#screenVideo{width:100%;max-height:440px;object-fit:contain;display:none}
+.ph-placeholder{text-align:center;color:var(--text3);padding:40px}
+.ph-placeholder .ic{font-size:3rem;margin-bottom:12px}
+.ph-placeholder p{font-size:.875rem;line-height:1.6}
+.preview-footer{padding:14px 20px;border-top:1px solid var(--border);display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.slides-strip{padding:12px 20px;border-top:1px solid var(--border);display:flex;gap:8px;overflow-x:auto;min-height:76px;align-items:center}
+.slide-thumb{width:90px;height:58px;border-radius:6px;border:2px solid var(--border2);object-fit:cover;flex-shrink:0;cursor:pointer;transition:border-color .2s;background:#111}
+.slide-thumb:hover,.slide-thumb.active{border-color:var(--accent);box-shadow:0 0 0 2px rgba(79,124,255,.2)}
+.slides-empty{font-size:.75rem;color:var(--text3);font-family:'JetBrains Mono',monospace}
+.side-panel{display:flex;flex-direction:column;gap:14px}
+.info-card{background:var(--surface);border:1px solid var(--border2);border-radius:var(--radius-lg);padding:18px}
+.info-card h3{font-size:.75rem;font-weight:800;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:12px}
+.timer{font-family:'JetBrains Mono',monospace;font-size:2rem;font-weight:500;color:var(--red);text-align:center;padding:14px;background:var(--red-dim);border-radius:var(--radius-sm);border:1px solid rgba(239,68,68,.15)}
+.stat-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;font-size:.82rem}
+.stat-row:last-child{margin-bottom:0}
+.stat-label{color:var(--text3);font-family:'JetBrains Mono',monospace;font-size:.7rem;text-transform:uppercase}
+.stat-val{font-weight:800}
+.action-group{display:flex;flex-direction:column;gap:9px}
+.hint-card{font-size:.78rem;color:var(--text2);line-height:1.9}
+.hint-card strong{color:var(--text)}
+.capture-flash{position:fixed;inset:0;background:rgba(79,124,255,.12);pointer-events:none;opacity:0;z-index:9998;transition:opacity .08s}
+.hint-text{font-size:.75rem;color:var(--text3)}
+@media(max-width:800px){.lecture-grid{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+
+<nav class="topbar">
+  <div class="topbar-left">
+    <a href="/" class="topbar-logo">UniEPR</a>
+    <span class="topbar-page">👩‍🏫 Teacher Portal</span>
+  </div>
+  <div class="topbar-right">
+    <span id="liveBadge" style="display:none"><span class="badge badge-live"><span class="dot"></span>LIVE</span></span>
+    <div class="user-chip" id="userChip"></div>
+    <button class="btn btn-ghost btn-sm" onclick="logout()">Logout</button>
+  </div>
+</nav>
+
+<!-- Setup -->
+<div id="setupUI">
+  <div class="setup-card">
+    <h2>Naya Lecture Shuru Karo</h2>
+    <p class="sub">Details bhar ke start karo. Browser aapka screen share maangega — apna smartboard/PPT wala screen select karna.</p>
+    <div class="field">
+      <label>Lecture Title</label>
+      <input type="text" id="lTitle" placeholder="e.g. Binary Trees — Introduction">
+    </div>
+    <div class="field">
+      <label>Subject</label>
+      <select id="lSubject"><option value="">Subject chuniye</option></select>
+    </div>
+    <div class="field">
+      <label>Class / Section</label>
+      <input type="text" id="lClass" placeholder="e.g. CSE-6A, ECE-4B">
+    </div>
+    <div class="err" id="setupErr"></div>
+    <button class="btn btn-success btn-lg w-full" onclick="startLecture()" style="margin-top:4px">🎬 Lecture Shuru Karo</button>
+    <p style="text-align:center;font-size:.75rem;color:var(--text3);margin-top:12px">Screen share dialog aayega — smartboard ka screen select karna</p>
+  </div>
+</div>
+
+<!-- Live UI -->
+<div id="liveUI">
+  <div class="page-wrap">
+    <div class="lecture-grid">
+      <!-- Left -->
+      <div style="display:flex;flex-direction:column;gap:16px">
+        <div class="preview-area">
+          <div class="preview-header">
+            <span class="ph-title" id="livTitle">Lecture</span>
+            <span class="badge badge-live"><span class="dot"></span>LIVE</span>
+          </div>
+          <div class="preview-canvas-wrap">
+            <video id="screenVideo" autoplay muted playsinline></video>
+            <div class="ph-placeholder" id="phPlaceholder" style="display:none">
+              <div class="ic">🖥️</div>
+              <p>Screen share active hai.<br>Jab bhi slide complete ho, <strong>Capture</strong> dabao.</p>
+            </div>
+          </div>
+          <div class="preview-footer">
+            <button class="btn btn-primary" id="captureBtn" onclick="captureSlide()">📸 Capture Slide</button>
+            <button class="btn btn-ghost btn-sm" id="undoBtn" onclick="undoSlide()" disabled>↩ Undo</button>
+            <span class="hint-text" id="captureHint">Spacebar shortcut bhi kaam karta hai</span>
+          </div>
+          <div class="slides-strip" id="slidesStrip">
+            <span class="slides-empty">Abhi koi slide capture nahi hui</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right -->
+      <div class="side-panel">
+        <div class="info-card">
+          <div class="timer" id="timerEl">00:00:00</div>
+        </div>
+        <div class="info-card">
+          <h3>Lecture Info</h3>
+          <div class="stat-row"><span class="stat-label">Slides</span><span class="stat-val" id="slideCount">0</span></div>
+          <div class="stat-row"><span class="stat-label">Subject</span><span class="stat-val" id="livSubject">—</span></div>
+          <div class="stat-row"><span class="stat-label">Class</span><span class="stat-val" id="livClass">—</span></div>
+        </div>
+        <div class="info-card">
+          <h3>Actions</h3>
+          <div class="action-group">
+            <button class="btn btn-primary" onclick="captureSlide()">📸 Slide Capture Karo</button>
+            <button class="btn btn-ghost" onclick="previewPDF()">👁 PDF Preview</button>
+            <button class="btn btn-danger" onclick="openEndModal()">🔴 Lecture Khatam Karo</button>
+          </div>
+          <div id="pdfProgress" style="display:none;margin-top:14px">
+            <p id="pdfMsg" style="font-size:.78rem;color:var(--text2);margin-bottom:8px">PDF ban rahi hai...</p>
+            <div class="progress-wrap"><div class="progress-fill" id="pdfBar" style="width:0%"></div></div>
+          </div>
+        </div>
+        <div class="info-card hint-card">
+          <strong>💡 Workflow:</strong><br>
+          1. PPT/board pe padhaao<br>
+          2. Slide complete hone pe <strong>Capture</strong> dabao<br>
+          3. Repeat karo har slide ke liye<br>
+          4. End pe <strong>Lecture Khatam</strong> dabao<br>
+          5. Students ko PDF turant milti hai ✅
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- End Modal -->
+<div class="modal-ov" id="endModal">
+  <div class="modal">
+    <h2>🔴 Lecture Khatam Karo?</h2>
+    <p><strong id="modalSlides">0</strong> slides ki PDF ban jaayegi aur students ke dashboard pe upload ho jaayegi.</p>
+    <p style="margin-top:8px">Students turant download kar paayenge.</p>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeModal()">Ruko</button>
+      <button class="btn btn-danger" onclick="endLecture()">Haan, Khatam Karo & PDF Upload Karo</button>
+    </div>
+  </div>
+</div>
+
+<div class="capture-flash" id="flash"></div>
+<div id="toast"></div>
+
+<script src="/socket.io/socket.io.js"></script>
+<script src="js/utils.js"></script>
+<script>
+// ── State ──────────────────────────────────────────────
+const S = { lectureId:null, slides:[], slideCount:0, stream:null, timer:null, startTime:null };
+let user = null;
+const socket = io();
+
+// ── Boot ───────────────────────────────────────────────
+(async () => {
+  user = await requireAuth('teacher');
+  if (!user) return;
+  renderUserChip(user);
+  // Populate subjects from user profile
+  const sel = document.getElementById('lSubject');
+  (user.subjects||[]).forEach(s => {
+    const o = document.createElement('option');
+    o.value = o.textContent = s;
+    sel.appendChild(o);
+  });
+})();
+
+// ── Start Lecture ──────────────────────────────────────
+async function startLecture() {
+  const title   = document.getElementById('lTitle').value.trim();
+  const subject = document.getElementById('lSubject').value;
+  const cls     = document.getElementById('lClass').value.trim();
+  const err     = document.getElementById('setupErr');
+  err.classList.remove('show');
+
+  if (!title||!subject||!cls) { err.textContent='Sab fields bharein'; err.classList.add('show'); return; }
+
+  // Screen share
+  try {
+    S.stream = await navigator.mediaDevices.getDisplayMedia({ video:{ width:1920,height:1080 }, audio:false });
+    const video = document.getElementById('screenVideo');
+    video.srcObject = S.stream;
+    video.style.display = 'block';
+    S.stream.getVideoTracks()[0].addEventListener('ended', () => toast('Screen share band ho gaya','error'));
+  } catch {
+    err.textContent = 'Screen share cancel ho gayi ya browser support nahi karta';
+    err.classList.add('show'); return;
+  }
+
+  // API call
+  try {
+    const data = await api('POST','/api/lecture/start',{ title, subject, class_name: cls });
+    S.lectureId = data.lecture.id;
+    S.slides = []; S.slideCount = 0; S.startTime = Date.now();
+    document.getElementById('livTitle').textContent = title;
+    document.getElementById('livSubject').textContent = subject;
+    document.getElementById('livClass').textContent = cls;
+    document.getElementById('setupUI').style.display = 'none';
+    document.getElementById('liveUI').style.display = 'block';
+    document.getElementById('liveBadge').style.display = 'inline-flex';
+    S.timer = setInterval(tickTimer, 1000);
+    toast('Lecture live hai! Ab padhao aur slides capture karo.','success');
+  } catch(e) { err.textContent=e.message; err.classList.add('show'); stopStream(); }
+}
+
+// ── Timer ──────────────────────────────────────────────
+function tickTimer() {
+  const e = Date.now()-S.startTime;
+  const h=Math.floor(e/3600000),m=Math.floor((e%3600000)/60000),s=Math.floor((e%60000)/1000);
+  document.getElementById('timerEl').textContent=`${pad(h)}:${pad(m)}:${pad(s)}`;
+}
+function pad(n){return String(n).padStart(2,'0')}
+
+// ── Capture ────────────────────────────────────────────
+async function captureSlide() {
+  const video = document.getElementById('screenVideo');
+  if (!video.srcObject) { toast('Screen share active nahi hai','error'); return; }
+  const btn = document.getElementById('captureBtn');
+  btn.disabled=true; btn.textContent='Capturing...';
+
+  // Flash
+  const fl = document.getElementById('flash');
+  fl.style.opacity='1'; setTimeout(()=>fl.style.opacity='0',100);
+
+  const c = document.createElement('canvas');
+  c.width = video.videoWidth||1280; c.height = video.videoHeight||720;
+  c.getContext('2d').drawImage(video,0,0,c.width,c.height);
+  const img = c.toDataURL('image/jpeg', 0.88);
+
+  S.slides.push(img); S.slideCount++;
+  document.getElementById('slideCount').textContent = S.slideCount;
+  document.getElementById('undoBtn').disabled = false;
+  addThumb(img, S.slideCount);
+  document.getElementById('captureHint').textContent = `Slide ${S.slideCount} capture ho gayi ✓`;
+
+  try { await api('POST','/api/lecture/slide',{ lectureId:S.lectureId, slideNumber:S.slideCount }); } catch{}
+  toast(`Slide ${S.slideCount} capture ho gayi!`,'success');
+  setTimeout(()=>{ btn.disabled=false; btn.innerHTML='📸 Capture Slide'; },700);
+}
+
+function addThumb(img, num) {
+  const strip = document.getElementById('slidesStrip');
+  strip.querySelector('.slides-empty')?.remove();
+  document.querySelectorAll('.slide-thumb').forEach(t=>t.classList.remove('active'));
+  const el = document.createElement('img');
+  el.src=img; el.className='slide-thumb active'; el.title=`Slide ${num}`;
+  el.onclick=()=>{ document.querySelectorAll('.slide-thumb').forEach(t=>t.classList.remove('active')); el.classList.add('active'); };
+  strip.appendChild(el); strip.scrollLeft=strip.scrollWidth;
+}
+
+function undoSlide() {
+  if (!S.slides.length) return;
+  S.slides.pop(); S.slideCount--;
+  document.getElementById('slideCount').textContent = S.slideCount;
+  document.querySelectorAll('.slide-thumb').last?.remove();
+  const thumbs = document.querySelectorAll('.slide-thumb');
+  thumbs[thumbs.length-1]?.remove();
+  if (!S.slideCount) {
+    document.getElementById('slidesStrip').innerHTML='<span class="slides-empty">Abhi koi slide capture nahi hui</span>';
+    document.getElementById('undoBtn').disabled=true;
+  }
+  toast('Last slide hata di','info');
+}
+
+// ── PDF ────────────────────────────────────────────────
+async function buildPDF() {
+  const { jsPDF } = window.jspdf;
+  const pdf = new jsPDF({ orientation:'landscape', unit:'px', format:[1280,720] });
+  const title = document.getElementById('livTitle').textContent;
+  const subject = document.getElementById('livSubject').textContent;
+  const cls = document.getElementById('livClass').textContent;
+
+  for (let i=0; i<S.slides.length; i++) {
+    if (i>0) pdf.addPage();
+    pdf.addImage(S.slides[i],'JPEG',0,0,1280,720);
+    // Footer bar
+    pdf.setFillColor(13,15,20); pdf.rect(0,695,1280,25,'F');
+    pdf.setFontSize(10); pdf.setTextColor(136,144,168);
+    pdf.text(`${title} · ${subject} · ${cls}`, 20, 710);
+    pdf.text(`Slide ${i+1} / ${S.slides.length}`, 1260, 710, { align:'right' });
+  }
+  return pdf;
+}
+
+async function previewPDF() {
+  if (!S.slides.length) { toast('Pehle slides capture karo','error'); return; }
+  toast('PDF preview khul raha hai...','info');
+  const pdf = await buildPDF();
+  window.open(URL.createObjectURL(pdf.output('blob')),'_blank');
+}
+
+// ── End ────────────────────────────────────────────────
+function openEndModal() {
+  if (!S.slides.length) { toast('Kam se kam ek slide capture karo','error'); return; }
+  document.getElementById('modalSlides').textContent = S.slideCount;
+  document.getElementById('endModal').classList.add('open');
+}
+function closeModal() { document.getElementById('endModal').classList.remove('open'); }
+
+async function endLecture() {
+  closeModal();
+  clearInterval(S.timer); stopStream();
+  const prog=document.getElementById('pdfProgress'), bar=document.getElementById('pdfBar'), msg=document.getElementById('pdfMsg');
+  prog.style.display='block'; bar.style.width='20%'; msg.textContent='PDF ban rahi hai...';
+
+  let pdfBlob;
+  try {
+    const pdf = await buildPDF();
+    pdfBlob = pdf.output('blob');
+    bar.style.width='60%'; msg.textContent='Server pe upload ho rahi hai...';
+  } catch(e) { toast('PDF generation fail: '+e.message,'error'); return; }
+
+  try {
+    const form = new FormData();
+    form.append('pdf', pdfBlob, 'lecture.pdf');
+    form.append('lectureId', S.lectureId);
+    const res = await fetch('/api/lecture/end',{ method:'POST', body:form, credentials:'include' });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error);
+    bar.style.width='100%'; msg.textContent='✅ Upload ho gayi! Students dekh sakte hain.';
+    document.getElementById('liveBadge').style.display='none';
+    toast('🎉 Lecture khatam! PDF students ke dashboard pe aa gayi.','success');
+    setTimeout(()=>resetTeacher(), 2500);
+  } catch(e) {
+    msg.textContent='❌ Upload fail — PDF locally download ho rahi hai';
+    const url=URL.createObjectURL(pdfBlob);
+    const a=document.createElement('a'); a.href=url; a.download=`lecture-${Date.now()}.pdf`; a.click();
+    toast('Server error. PDF download ho gayi.','error');
+  }
+}
+
+function resetTeacher() {
+  S.lectureId=null; S.slides=[]; S.slideCount=0; S.stream=null;
+  document.getElementById('setupUI').style.display='block';
+  document.getElementById('liveUI').style.display='none';
+  document.getElementById('slidesStrip').innerHTML='<span class="slides-empty">Abhi koi slide capture nahi hui</span>';
+  document.getElementById('slideCount').textContent='0';
+  document.getElementById('timerEl').textContent='00:00:00';
+  document.getElementById('pdfProgress').style.display='none';
+  document.getElementById('pdfBar').style.width='0%';
+  document.getElementById('undoBtn').disabled=true;
+  const v=document.getElementById('screenVideo'); v.srcObject=null; v.style.display='none';
+}
+
+function stopStream() { S.stream?.getTracks().forEach(t=>t.stop()); S.stream=null; }
+
+// Spacebar = capture
+document.addEventListener('keydown', e => {
+  if (e.code==='Space' && document.getElementById('liveUI').style.display!=='none') {
+    e.preventDefault(); captureSlide();
+  }
+});
+</script>
+</body>
+</html>
