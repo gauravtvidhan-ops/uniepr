@@ -39,6 +39,45 @@
 .capture-flash{position:fixed;inset:0;background:rgba(79,124,255,.12);pointer-events:none;opacity:0;z-index:9998;transition:opacity .08s}
 .hint-text{font-size:.75rem;color:var(--text3)}
 @media(max-width:800px){.lecture-grid{grid-template-columns:1fr}}
+
+/* ── FLOATING WIDGET ── */
+#floatWidget{
+  position:fixed;bottom:28px;right:28px;z-index:9997;
+  background:rgba(13,15,20,0.96);
+  border:1px solid var(--border2);
+  border-radius:20px;padding:16px;
+  box-shadow:0 8px 40px rgba(0,0,0,.7);
+  backdrop-filter:blur(20px);
+  display:none;flex-direction:column;gap:12px;
+  width:220px;
+  transition:all .3s cubic-bezier(.34,1.56,.64,1);
+}
+#floatWidget.mini{
+  width:64px;height:64px;padding:0;gap:0;
+  border-radius:50%;
+  align-items:center;justify-content:center;
+  cursor:pointer;
+}
+#floatWidget.mini .fw-full{display:none}
+#floatWidget:not(.mini) .fw-mini-icon{display:none}
+.fw-header{display:flex;align-items:center;justify-content:space-between}
+.fw-label{font-family:'JetBrains Mono',monospace;font-size:.6rem;letter-spacing:1.5px;color:var(--red);text-transform:uppercase}
+.fw-minimize{background:none;border:none;color:var(--text3);cursor:pointer;font-size:1rem;padding:3px 6px;border-radius:4px;transition:all .15s;line-height:1}
+.fw-minimize:hover{background:var(--surface2);color:var(--text)}
+.fw-timer{font-family:'JetBrains Mono',monospace;font-size:1.4rem;font-weight:500;color:var(--red);text-align:center;background:var(--red-dim);border-radius:10px;padding:8px;border:1px solid rgba(239,68,68,.15);letter-spacing:2px}
+.fw-stats{display:flex;gap:8px}
+.fw-stat{flex:1;background:var(--surface2);border-radius:8px;padding:8px 6px;text-align:center}
+.fw-stat .v{font-family:'JetBrains Mono',monospace;font-size:1.2rem;font-weight:700;color:var(--accent)}
+.fw-stat .l{font-size:.58rem;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;margin-top:2px}
+.fw-capture{width:100%;padding:13px;background:var(--accent);border:none;border-radius:10px;font-family:'Cabinet Grotesk',sans-serif;font-size:.9rem;font-weight:800;color:#fff;cursor:pointer;transition:all .2s}
+.fw-capture:hover{background:var(--accent2);transform:scale(1.02)}
+.fw-capture:active{transform:scale(.97)}
+.fw-capture.did-capture{background:var(--green)}
+.fw-end{width:100%;padding:9px;background:transparent;border:1px solid rgba(239,68,68,.3);border-radius:8px;font-family:'Cabinet Grotesk',sans-serif;font-size:.8rem;font-weight:700;color:var(--red);cursor:pointer;transition:all .2s}
+.fw-end:hover{background:var(--red-dim)}
+.fw-mini-icon{font-size:1.8rem;line-height:1;user-select:none}
+@keyframes fw-pulse{0%{box-shadow:0 0 0 0 rgba(79,124,255,.6)}70%{box-shadow:0 0 0 12px rgba(79,124,255,0)}100%{box-shadow:0 0 0 0 rgba(79,124,255,0)}}
+.fw-capture.pulse{animation:fw-pulse .4s ease-out}
 </style>
 </head>
 <body>
@@ -59,7 +98,7 @@
 <div id="setupUI">
   <div class="setup-card">
     <h2>Naya Lecture Shuru Karo</h2>
-    <p class="sub">Details bhar ke start karo. Browser aapka screen share maangega — apna smartboard/PPT wala screen select karna.</p>
+    <p class="sub">Details bhar ke start karo. Lecture shuru hone ke baad ek <strong style="color:var(--accent)">floating button</strong> screen pe rahega — PPT pe jaao, board pe likho, bina tab switch ke capture karo!</p>
     <div class="field">
       <label>Lecture Title</label>
       <input type="text" id="lTitle" placeholder="e.g. Binary Trees — Introduction">
@@ -82,7 +121,6 @@
 <div id="liveUI">
   <div class="page-wrap">
     <div class="lecture-grid">
-      <!-- Left -->
       <div style="display:flex;flex-direction:column;gap:16px">
         <div class="preview-area">
           <div class="preview-header">
@@ -93,13 +131,13 @@
             <video id="screenVideo" autoplay muted playsinline></video>
             <div class="ph-placeholder" id="phPlaceholder" style="display:none">
               <div class="ic">🖥️</div>
-              <p>Screen share active hai.<br>Jab bhi slide complete ho, <strong>Capture</strong> dabao.</p>
+              <p>Screen share active hai.<br>Corner mein floating button se capture karo!</p>
             </div>
           </div>
           <div class="preview-footer">
             <button class="btn btn-primary" id="captureBtn" onclick="captureSlide()">📸 Capture Slide</button>
             <button class="btn btn-ghost btn-sm" id="undoBtn" onclick="undoSlide()" disabled>↩ Undo</button>
-            <span class="hint-text" id="captureHint">Spacebar shortcut bhi kaam karta hai</span>
+            <span class="hint-text" id="captureHint">Spacebar ya floating button use karo</span>
           </div>
           <div class="slides-strip" id="slidesStrip">
             <span class="slides-empty">Abhi koi slide capture nahi hui</span>
@@ -107,7 +145,6 @@
         </div>
       </div>
 
-      <!-- Right -->
       <div class="side-panel">
         <div class="info-card">
           <div class="timer" id="timerEl">00:00:00</div>
@@ -131,15 +168,38 @@
           </div>
         </div>
         <div class="info-card hint-card">
-          <strong>💡 Workflow:</strong><br>
-          1. PPT/board pe padhaao<br>
-          2. Slide complete hone pe <strong>Capture</strong> dabao<br>
-          3. Repeat karo har slide ke liye<br>
-          4. End pe <strong>Lecture Khatam</strong> dabao<br>
-          5. Students ko PDF turant milti hai ✅
+          <strong>💡 Floating Widget:</strong><br>
+          PPT pe jao — widget corner mein rahega<br>
+          📸 click = slide capture<br>
+          — dabao = minimize (sirf icon dikhega)<br>
+          Spacebar bhi kaam karta hai ✅
         </div>
       </div>
     </div>
+  </div>
+</div>
+
+<!-- FLOATING WIDGET -->
+<div id="floatWidget">
+  <div class="fw-mini-icon" onclick="toggleMini()">📸</div>
+  <div class="fw-full">
+    <div class="fw-header">
+      <span class="fw-label">● Live</span>
+      <button class="fw-minimize" onclick="toggleMini()" title="Minimize">—</button>
+    </div>
+    <div class="fw-timer" id="fwTimer">00:00:00</div>
+    <div class="fw-stats">
+      <div class="fw-stat">
+        <div class="v" id="fwSlides">0</div>
+        <div class="l">Slides</div>
+      </div>
+      <div class="fw-stat">
+        <div class="v" style="color:var(--green);font-size:.8rem">Live</div>
+        <div class="l">Status</div>
+      </div>
+    </div>
+    <button class="fw-capture" id="fwCaptureBtn" onclick="captureSlide()">📸 Capture Slide</button>
+    <button class="fw-end" onclick="openEndModal()">🔴 Lecture Khatam Karo</button>
   </div>
 </div>
 
@@ -162,209 +222,196 @@
 <script src="/socket.io/socket.io.js"></script>
 <script src="js/utils.js"></script>
 <script>
-// ── State ──────────────────────────────────────────────
-const S = { lectureId:null, slides:[], slideCount:0, stream:null, timer:null, startTime:null };
-let user = null;
-const socket = io();
+const S={lectureId:null,slides:[],slideCount:0,stream:null,timer:null,startTime:null};
+let user=null, isMini=false;
+const socket=io();
 
-// ── Boot ───────────────────────────────────────────────
-(async () => {
-  user = await requireAuth('teacher');
-  if (!user) return;
+(async()=>{
+  user=await requireAuth('teacher');
+  if(!user) return;
   renderUserChip(user);
-  // Populate subjects from user profile
-  const sel = document.getElementById('lSubject');
-  (user.subjects||[]).forEach(s => {
-    const o = document.createElement('option');
-    o.value = o.textContent = s;
-    sel.appendChild(o);
+  const sel=document.getElementById('lSubject');
+  (user.subjects||[]).forEach(s=>{
+    const o=document.createElement('option');
+    o.value=o.textContent=s; sel.appendChild(o);
   });
 })();
 
-// ── Start Lecture ──────────────────────────────────────
-async function startLecture() {
-  const title   = document.getElementById('lTitle').value.trim();
-  const subject = document.getElementById('lSubject').value;
-  const cls     = document.getElementById('lClass').value.trim();
-  const err     = document.getElementById('setupErr');
+async function startLecture(){
+  const title=document.getElementById('lTitle').value.trim();
+  const subject=document.getElementById('lSubject').value;
+  const cls=document.getElementById('lClass').value.trim();
+  const err=document.getElementById('setupErr');
   err.classList.remove('show');
+  if(!title||!subject||!cls){err.textContent='Sab fields bharein';err.classList.add('show');return;}
 
-  if (!title||!subject||!cls) { err.textContent='Sab fields bharein'; err.classList.add('show'); return; }
-
-  // Screen share
-  try {
-    S.stream = await navigator.mediaDevices.getDisplayMedia({ video:{ width:1920,height:1080 }, audio:false });
-    const video = document.getElementById('screenVideo');
-    video.srcObject = S.stream;
-    video.style.display = 'block';
-    S.stream.getVideoTracks()[0].addEventListener('ended', () => toast('Screen share band ho gaya','error'));
-  } catch {
-    err.textContent = 'Screen share cancel ho gayi ya browser support nahi karta';
-    err.classList.add('show'); return;
+  try{
+    S.stream=await navigator.mediaDevices.getDisplayMedia({video:{width:1920,height:1080},audio:false});
+    const v=document.getElementById('screenVideo');
+    v.srcObject=S.stream; v.style.display='block';
+    S.stream.getVideoTracks()[0].addEventListener('ended',()=>toast('Screen share band ho gaya','error'));
+  }catch{
+    err.textContent='Screen share cancel ho gayi';err.classList.add('show');return;
   }
 
-  // API call
-  try {
-    const data = await api('POST','/api/lecture/start',{ title, subject, class_name: cls });
-    S.lectureId = data.lecture.id;
-    S.slides = []; S.slideCount = 0; S.startTime = Date.now();
-    document.getElementById('livTitle').textContent = title;
-    document.getElementById('livSubject').textContent = subject;
-    document.getElementById('livClass').textContent = cls;
-    document.getElementById('setupUI').style.display = 'none';
-    document.getElementById('liveUI').style.display = 'block';
-    document.getElementById('liveBadge').style.display = 'inline-flex';
-    S.timer = setInterval(tickTimer, 1000);
-    toast('Lecture live hai! Ab padhao aur slides capture karo.','success');
-  } catch(e) { err.textContent=e.message; err.classList.add('show'); stopStream(); }
+  try{
+    const data=await api('POST','/api/lecture/start',{title,subject,class_name:cls});
+    S.lectureId=data.lecture.id; S.slides=[]; S.slideCount=0; S.startTime=Date.now();
+    document.getElementById('livTitle').textContent=title;
+    document.getElementById('livSubject').textContent=subject;
+    document.getElementById('livClass').textContent=cls;
+    document.getElementById('setupUI').style.display='none';
+    document.getElementById('liveUI').style.display='block';
+    document.getElementById('liveBadge').style.display='inline-flex';
+    document.getElementById('floatWidget').style.display='flex';
+
+    S.timer=setInterval(()=>{
+      const e=Date.now()-S.startTime;
+      const h=Math.floor(e/3600000),m=Math.floor((e%3600000)/60000),s=Math.floor((e%60000)/1000);
+      const t=`${pad(h)}:${pad(m)}:${pad(s)}`;
+      document.getElementById('timerEl').textContent=t;
+      document.getElementById('fwTimer').textContent=t;
+    },1000);
+
+    toast('Lecture live! Floating widget corner mein hai.','success');
+  }catch(e){err.textContent=e.message;err.classList.add('show');stopStream();}
 }
 
-// ── Timer ──────────────────────────────────────────────
-function tickTimer() {
-  const e = Date.now()-S.startTime;
-  const h=Math.floor(e/3600000),m=Math.floor((e%3600000)/60000),s=Math.floor((e%60000)/1000);
-  document.getElementById('timerEl').textContent=`${pad(h)}:${pad(m)}:${pad(s)}`;
-}
 function pad(n){return String(n).padStart(2,'0')}
 
-// ── Capture ────────────────────────────────────────────
-async function captureSlide() {
-  const video = document.getElementById('screenVideo');
-  if (!video.srcObject) { toast('Screen share active nahi hai','error'); return; }
-  const btn = document.getElementById('captureBtn');
-  btn.disabled=true; btn.textContent='Capturing...';
-
-  // Flash
-  const fl = document.getElementById('flash');
-  fl.style.opacity='1'; setTimeout(()=>fl.style.opacity='0',100);
-
-  const c = document.createElement('canvas');
-  c.width = video.videoWidth||1280; c.height = video.videoHeight||720;
-  c.getContext('2d').drawImage(video,0,0,c.width,c.height);
-  const img = c.toDataURL('image/jpeg', 0.88);
-
-  S.slides.push(img); S.slideCount++;
-  document.getElementById('slideCount').textContent = S.slideCount;
-  document.getElementById('undoBtn').disabled = false;
-  addThumb(img, S.slideCount);
-  document.getElementById('captureHint').textContent = `Slide ${S.slideCount} capture ho gayi ✓`;
-
-  try { await api('POST','/api/lecture/slide',{ lectureId:S.lectureId, slideNumber:S.slideCount }); } catch{}
-  toast(`Slide ${S.slideCount} capture ho gayi!`,'success');
-  setTimeout(()=>{ btn.disabled=false; btn.innerHTML='📸 Capture Slide'; },700);
+function toggleMini(){
+  isMini=!isMini;
+  document.getElementById('floatWidget').classList.toggle('mini',isMini);
 }
 
-function addThumb(img, num) {
-  const strip = document.getElementById('slidesStrip');
+async function captureSlide(){
+  const video=document.getElementById('screenVideo');
+  if(!video.srcObject){toast('Screen share active nahi hai','error');return;}
+
+  document.getElementById('flash').style.opacity='1';
+  setTimeout(()=>document.getElementById('flash').style.opacity='0',100);
+
+  const fwBtn=document.getElementById('fwCaptureBtn');
+  fwBtn.classList.add('did-capture','pulse');
+  fwBtn.textContent='✓ Captured!';
+  setTimeout(()=>{fwBtn.classList.remove('did-capture','pulse');fwBtn.textContent='📸 Capture Slide';},800);
+
+  const c=document.createElement('canvas');
+  c.width=video.videoWidth||1280; c.height=video.videoHeight||720;
+  c.getContext('2d').drawImage(video,0,0,c.width,c.height);
+  const img=c.toDataURL('image/jpeg',.88);
+
+  S.slides.push(img); S.slideCount++;
+  document.getElementById('slideCount').textContent=S.slideCount;
+  document.getElementById('fwSlides').textContent=S.slideCount;
+  document.getElementById('undoBtn').disabled=false;
+  addThumb(img,S.slideCount);
+  document.getElementById('captureHint').textContent=`Slide ${S.slideCount} capture ho gayi ✓`;
+  try{await api('POST','/api/lecture/slide',{lectureId:S.lectureId,slideNumber:S.slideCount});}catch{}
+  toast(`Slide ${S.slideCount} capture ho gayi!`,'success');
+}
+
+function addThumb(img,num){
+  const strip=document.getElementById('slidesStrip');
   strip.querySelector('.slides-empty')?.remove();
   document.querySelectorAll('.slide-thumb').forEach(t=>t.classList.remove('active'));
-  const el = document.createElement('img');
+  const el=document.createElement('img');
   el.src=img; el.className='slide-thumb active'; el.title=`Slide ${num}`;
-  el.onclick=()=>{ document.querySelectorAll('.slide-thumb').forEach(t=>t.classList.remove('active')); el.classList.add('active'); };
+  el.onclick=()=>{document.querySelectorAll('.slide-thumb').forEach(t=>t.classList.remove('active'));el.classList.add('active');};
   strip.appendChild(el); strip.scrollLeft=strip.scrollWidth;
 }
 
-function undoSlide() {
-  if (!S.slides.length) return;
+function undoSlide(){
+  if(!S.slides.length) return;
   S.slides.pop(); S.slideCount--;
-  document.getElementById('slideCount').textContent = S.slideCount;
-  document.querySelectorAll('.slide-thumb').last?.remove();
-  const thumbs = document.querySelectorAll('.slide-thumb');
-  thumbs[thumbs.length-1]?.remove();
-  if (!S.slideCount) {
+  document.getElementById('slideCount').textContent=S.slideCount;
+  document.getElementById('fwSlides').textContent=S.slideCount;
+  document.querySelectorAll('.slide-thumb')[document.querySelectorAll('.slide-thumb').length-1]?.remove();
+  if(!S.slideCount){
     document.getElementById('slidesStrip').innerHTML='<span class="slides-empty">Abhi koi slide capture nahi hui</span>';
     document.getElementById('undoBtn').disabled=true;
   }
   toast('Last slide hata di','info');
 }
 
-// ── PDF ────────────────────────────────────────────────
-async function buildPDF() {
-  const { jsPDF } = window.jspdf;
-  const pdf = new jsPDF({ orientation:'landscape', unit:'px', format:[1280,720] });
-  const title = document.getElementById('livTitle').textContent;
-  const subject = document.getElementById('livSubject').textContent;
-  const cls = document.getElementById('livClass').textContent;
-
-  for (let i=0; i<S.slides.length; i++) {
-    if (i>0) pdf.addPage();
+async function buildPDF(){
+  const{jsPDF}=window.jspdf;
+  const pdf=new jsPDF({orientation:'landscape',unit:'px',format:[1280,720]});
+  const title=document.getElementById('livTitle').textContent;
+  const subject=document.getElementById('livSubject').textContent;
+  const cls=document.getElementById('livClass').textContent;
+  for(let i=0;i<S.slides.length;i++){
+    if(i>0) pdf.addPage();
     pdf.addImage(S.slides[i],'JPEG',0,0,1280,720);
-    // Footer bar
     pdf.setFillColor(13,15,20); pdf.rect(0,695,1280,25,'F');
     pdf.setFontSize(10); pdf.setTextColor(136,144,168);
-    pdf.text(`${title} · ${subject} · ${cls}`, 20, 710);
-    pdf.text(`Slide ${i+1} / ${S.slides.length}`, 1260, 710, { align:'right' });
+    pdf.text(`${title} · ${subject} · ${cls}`,20,710);
+    pdf.text(`Slide ${i+1} / ${S.slides.length}`,1260,710,{align:'right'});
   }
   return pdf;
 }
 
-async function previewPDF() {
-  if (!S.slides.length) { toast('Pehle slides capture karo','error'); return; }
+async function previewPDF(){
+  if(!S.slides.length){toast('Pehle slides capture karo','error');return;}
   toast('PDF preview khul raha hai...','info');
-  const pdf = await buildPDF();
+  const pdf=await buildPDF();
   window.open(URL.createObjectURL(pdf.output('blob')),'_blank');
 }
 
-// ── End ────────────────────────────────────────────────
-function openEndModal() {
-  if (!S.slides.length) { toast('Kam se kam ek slide capture karo','error'); return; }
-  document.getElementById('modalSlides').textContent = S.slideCount;
+function openEndModal(){
+  if(!S.slides.length){toast('Kam se kam ek slide capture karo','error');return;}
+  document.getElementById('modalSlides').textContent=S.slideCount;
   document.getElementById('endModal').classList.add('open');
 }
-function closeModal() { document.getElementById('endModal').classList.remove('open'); }
+function closeModal(){document.getElementById('endModal').classList.remove('open');}
 
-async function endLecture() {
-  closeModal();
-  clearInterval(S.timer); stopStream();
-  const prog=document.getElementById('pdfProgress'), bar=document.getElementById('pdfBar'), msg=document.getElementById('pdfMsg');
+async function endLecture(){
+  closeModal(); clearInterval(S.timer); stopStream();
+  document.getElementById('floatWidget').style.display='none';
+  const prog=document.getElementById('pdfProgress'),bar=document.getElementById('pdfBar'),msg=document.getElementById('pdfMsg');
   prog.style.display='block'; bar.style.width='20%'; msg.textContent='PDF ban rahi hai...';
-
   let pdfBlob;
-  try {
-    const pdf = await buildPDF();
-    pdfBlob = pdf.output('blob');
+  try{
+    pdfBlob=(await buildPDF()).output('blob');
     bar.style.width='60%'; msg.textContent='Server pe upload ho rahi hai...';
-  } catch(e) { toast('PDF generation fail: '+e.message,'error'); return; }
-
-  try {
-    const form = new FormData();
-    form.append('pdf', pdfBlob, 'lecture.pdf');
-    form.append('lectureId', S.lectureId);
-    const res = await fetch('/api/lecture/end',{ method:'POST', body:form, credentials:'include' });
-    const data = await res.json();
-    if (!res.ok) throw new Error(data.error);
-    bar.style.width='100%'; msg.textContent='✅ Upload ho gayi! Students dekh sakte hain.';
+  }catch(e){toast('PDF fail: '+e.message,'error');return;}
+  try{
+    const form=new FormData();
+    form.append('pdf',pdfBlob,'lecture.pdf');
+    form.append('lectureId',S.lectureId);
+    const res=await fetch('/api/lecture/end',{method:'POST',body:form,credentials:'include'});
+    const data=await res.json();
+    if(!res.ok) throw new Error(data.error);
+    bar.style.width='100%'; msg.textContent='✅ Upload ho gayi!';
     document.getElementById('liveBadge').style.display='none';
     toast('🎉 Lecture khatam! PDF students ke dashboard pe aa gayi.','success');
-    setTimeout(()=>resetTeacher(), 2500);
-  } catch(e) {
+    setTimeout(()=>resetTeacher(),2500);
+  }catch(e){
     msg.textContent='❌ Upload fail — PDF locally download ho rahi hai';
-    const url=URL.createObjectURL(pdfBlob);
-    const a=document.createElement('a'); a.href=url; a.download=`lecture-${Date.now()}.pdf`; a.click();
+    const a=document.createElement('a');
+    a.href=URL.createObjectURL(pdfBlob); a.download=`lecture-${Date.now()}.pdf`; a.click();
     toast('Server error. PDF download ho gayi.','error');
   }
 }
 
-function resetTeacher() {
-  S.lectureId=null; S.slides=[]; S.slideCount=0; S.stream=null;
-  document.getElementById('setupUI').style.display='block';
-  document.getElementById('liveUI').style.display='none';
+function resetTeacher(){
+  S.lectureId=null; S.slides=[]; S.slideCount=0; S.stream=null; isMini=false;
+  ['setupUI'].forEach(id=>document.getElementById(id).style.display='block');
+  ['liveUI','floatWidget'].forEach(id=>document.getElementById(id).style.display='none');
   document.getElementById('slidesStrip').innerHTML='<span class="slides-empty">Abhi koi slide capture nahi hui</span>';
-  document.getElementById('slideCount').textContent='0';
-  document.getElementById('timerEl').textContent='00:00:00';
+  ['slideCount','fwSlides'].forEach(id=>document.getElementById(id).textContent='0');
+  ['timerEl','fwTimer'].forEach(id=>document.getElementById(id).textContent='00:00:00');
   document.getElementById('pdfProgress').style.display='none';
   document.getElementById('pdfBar').style.width='0%';
   document.getElementById('undoBtn').disabled=true;
+  document.getElementById('floatWidget').classList.remove('mini');
   const v=document.getElementById('screenVideo'); v.srcObject=null; v.style.display='none';
 }
 
-function stopStream() { S.stream?.getTracks().forEach(t=>t.stop()); S.stream=null; }
+function stopStream(){S.stream?.getTracks().forEach(t=>t.stop()); S.stream=null;}
 
-// Spacebar = capture
-document.addEventListener('keydown', e => {
-  if (e.code==='Space' && document.getElementById('liveUI').style.display!=='none') {
-    e.preventDefault(); captureSlide();
-  }
+document.addEventListener('keydown',e=>{
+  if(e.code==='Space' && S.lectureId){e.preventDefault();captureSlide();}
 });
 </script>
 </body>
