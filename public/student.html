@@ -8,41 +8,60 @@
 .page-wrap{max-width:1050px;margin:0 auto;padding:28px 20px}
 .live-banner{background:linear-gradient(135deg,rgba(239,68,68,.08),rgba(239,68,68,.03));border:1px solid rgba(239,68,68,.22);border-radius:var(--radius-lg);padding:16px 22px;display:flex;align-items:center;justify-content:space-between;margin-bottom:24px;animation:lpulse 3s ease-in-out infinite}
 @keyframes lpulse{0%,100%{box-shadow:0 0 0 rgba(239,68,68,0)}50%{box-shadow:0 0 20px rgba(239,68,68,.08)}}
-.live-banner-l{display:flex;align-items:center;gap:14px}
 .stats-row{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:24px}
 .stat-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:18px 22px}
 .stat-num{font-size:1.9rem;font-weight:900;font-family:'JetBrains Mono',monospace}
 .stat-lbl{font-size:.68rem;font-family:'JetBrains Mono',monospace;color:var(--text3);text-transform:uppercase;letter-spacing:1px;margin-top:5px}
-.sec-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
-.sec-title{font-size:1rem;font-weight:800}
-.filter-tabs{display:flex;gap:5px;background:var(--surface2);border-radius:9px;padding:4px}
-.ftab{padding:7px 14px;border:none;border-radius:6px;background:transparent;color:var(--text3);font-family:'Cabinet Grotesk',sans-serif;font-size:.8rem;font-weight:700;cursor:pointer;transition:all .15s}
-.ftab.active{background:var(--surface3);color:var(--text)}
-.search-wrap{position:relative;margin-bottom:16px}
+
+/* Subject tree */
+.subject-tree{display:flex;flex-direction:column;gap:12px}
+.subject-group{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);overflow:hidden;transition:border-color .2s}
+.subject-group:has(.new-indicator){border-color:rgba(79,124,255,.3)}
+.subject-header{padding:16px 20px;display:flex;align-items:center;justify-content:space-between;cursor:pointer;transition:background .15s}
+.subject-header:hover{background:var(--surface2)}
+.subject-header-left{display:flex;align-items:center;gap:12px}
+.subject-icon{font-size:1.3rem}
+.subject-name{font-weight:800;font-size:1rem}
+.subject-count{font-family:'JetBrains Mono',monospace;font-size:.72rem;color:var(--text3);margin-top:2px}
+.subject-arrow{color:var(--text3);font-size:.8rem;transition:transform .2s}
+.subject-body{padding:12px 16px;border-top:1px solid var(--border);display:none}
+.subject-body.open{display:block}
+
+.unit-group{margin-bottom:12px}
+.unit-group:last-child{margin-bottom:0}
+.unit-header{display:flex;align-items:center;gap:8px;padding:6px 8px;margin-bottom:6px}
+.unit-icon{font-size:.9rem}
+.unit-name{font-family:'JetBrains Mono',monospace;font-size:.72rem;color:var(--text2);font-weight:500;text-transform:uppercase;letter-spacing:.5px}
+
+.lec-card{display:flex;align-items:center;justify-content:space-between;padding:12px 14px;border-radius:10px;background:var(--surface2);margin-bottom:6px;gap:12px;cursor:pointer;transition:all .2s;border:1px solid transparent}
+.lec-card:hover{background:var(--surface3);border-color:var(--border2)}
+.lec-card.is-new{background:rgba(79,124,255,.06);border-color:rgba(79,124,255,.2);animation:slideIn .3s ease}
+@keyframes slideIn{from{opacity:0;transform:translateX(-8px)}to{opacity:1;transform:translateX(0)}}
+.lec-card-left{display:flex;align-items:center;gap:12px;flex:1;min-width:0}
+.lec-num{font-family:'JetBrains Mono',monospace;font-size:.7rem;color:var(--text3);flex-shrink:0;min-width:28px;font-weight:500}
+.lec-info{min-width:0}
+.lec-title{font-weight:700;font-size:.875rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.lec-meta{font-size:.72rem;color:var(--text2);margin-top:3px;display:flex;gap:10px;flex-wrap:wrap}
+.lec-card-right{display:flex;align-items:center;gap:8px;flex-shrink:0}
+
+.search-wrap{position:relative;margin-bottom:20px}
 .search-wrap input{width:100%;padding:11px 14px 11px 40px;background:var(--surface);border:1px solid var(--border2);border-radius:var(--radius-sm);font-family:'Cabinet Grotesk',sans-serif;font-size:.9rem;color:var(--text);outline:none;transition:border-color .2s}
 .search-wrap input:focus{border-color:var(--accent)}
 .search-icon{position:absolute;left:13px;top:50%;transform:translateY(-50%);pointer-events:none}
-.lec-list{display:flex;flex-direction:column;gap:10px}
-.lec-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:18px 22px;display:flex;align-items:center;justify-content:space-between;gap:14px;transition:border-color .2s,box-shadow .2s}
-.lec-card:hover{border-color:var(--border2);box-shadow:0 4px 20px rgba(0,0,0,.2)}
-.lec-card.is-new{border-color:rgba(79,124,255,.25);background:rgba(79,124,255,.02);animation:slideIn .4s cubic-bezier(.34,1.56,.64,1)}
-@keyframes slideIn{from{opacity:0;transform:translateY(-8px) scale(.98)}to{opacity:1;transform:translateY(0) scale(1)}}
-.lec-left{display:flex;align-items:center;gap:14px;flex:1;min-width:0}
-.lec-icon{width:44px;height:44px;border-radius:var(--radius-sm);background:var(--surface2);display:flex;align-items:center;justify-content:center;font-size:1.3rem;flex-shrink:0}
-.lec-title{font-weight:800;font-size:.9rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.lec-meta{font-size:.74rem;color:var(--text2);margin-top:4px;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
-.lec-right{display:flex;align-items:center;gap:8px;flex-shrink:0}
-.empty-state{text-align:center;padding:60px 20px;color:var(--text3)}
-.empty-state .ei{font-size:3rem;margin-bottom:14px;opacity:.4}
-.empty-state .et{font-size:1rem;font-weight:700;color:var(--text2);margin-bottom:8px}
-.empty-state .ed{font-size:.85rem;line-height:1.6}
+
+.sec-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
+.sec-title{font-size:1rem;font-weight:800}
+
 .pdf-modal-ov{position:fixed;inset:0;background:rgba(0,0,0,.88);z-index:300;display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .2s;flex-direction:column;gap:14px}
 .pdf-modal-ov.open{opacity:1;pointer-events:auto}
 .pdf-modal-header{display:flex;align-items:center;justify-content:space-between;width:90vw;max-width:1000px}
 .pdf-modal-title{font-weight:800;font-size:.95rem}
-.pdf-modal-actions{display:flex;gap:8px}
 #pdfFrame{width:90vw;max-width:1000px;height:80vh;border:none;border-radius:var(--radius-lg);background:#fff}
-@media(max-width:600px){.stats-row{grid-template-columns:1fr 1fr}.lec-card{flex-direction:column;align-items:flex-start}.lec-right{width:100%}}
+.new-indicator{display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--accent);margin-left:6px}
+
+.empty-state{text-align:center;padding:60px 20px;color:var(--text3)}
+.empty-state .ei{font-size:3rem;margin-bottom:14px;opacity:.4}
+.empty-state .et{font-size:1rem;font-weight:700;color:var(--text2);margin-bottom:8px}
 </style>
 </head>
 <body>
@@ -59,15 +78,14 @@
   </div>
 </nav>
 
-<!-- Live Banner -->
 <div id="liveBannerWrap" style="display:none;padding:0 20px">
   <div style="max-width:1050px;margin:20px auto 0">
     <div class="live-banner">
-      <div class="live-banner-l">
+      <div style="display:flex;align-items:center;gap:14px">
         <span style="font-size:1.8rem">🔴</span>
         <div>
           <div style="font-weight:800;font-size:.95rem" id="liveBannerTitle">Abhi lecture chal raha hai!</div>
-          <div style="font-size:.78rem;color:var(--text2);margin-top:3px">Lecture khatam hote hi PDF yahan automatically aa jaayegi.</div>
+          <div style="font-size:.78rem;color:var(--text2);margin-top:3px">Lecture khatam hote hi PDF yahan aa jaayegi.</div>
         </div>
       </div>
       <span class="badge badge-live"><span class="dot"></span>LIVE</span>
@@ -76,11 +94,10 @@
 </div>
 
 <div class="page-wrap">
-  <!-- Stats -->
   <div class="stats-row">
     <div class="stat-card">
       <div class="stat-num" id="statTotal">0</div>
-      <div class="stat-lbl">Kul PDFs</div>
+      <div class="stat-lbl">Kul Lectures</div>
     </div>
     <div class="stat-card">
       <div class="stat-num" id="statNew" style="color:var(--accent)">0</div>
@@ -92,23 +109,18 @@
     </div>
   </div>
 
-  <!-- Lectures -->
-  <div>
-    <div class="sec-header">
-      <div class="sec-title">📚 Mere Subjects ke Lectures</div>
-      <div class="filter-tabs">
-        <button class="ftab active" onclick="filter('all',this)">Sab</button>
-        <button class="ftab" onclick="filter('new',this)">Naye</button>
-        <button class="ftab" onclick="filter('week',this)">Is Hafte</button>
-      </div>
-    </div>
-    <div class="search-wrap">
-      <span class="search-icon">🔍</span>
-      <input type="text" placeholder="Title, subject ya teacher se dhundho..." oninput="search(this.value)">
-    </div>
-    <div class="lec-list" id="lecList">
-      <div class="empty-state"><div class="ei">📭</div><div class="et">Load ho raha hai...</div></div>
-    </div>
+  <div class="sec-header">
+    <div class="sec-title">📚 Mere Subjects ke Lectures</div>
+    <button class="btn btn-ghost btn-sm" onclick="loadLectures()">🔄 Refresh</button>
+  </div>
+
+  <div class="search-wrap">
+    <span class="search-icon">🔍</span>
+    <input type="text" placeholder="Title, subject ya teacher se dhundho..." oninput="searchLectures(this.value)" id="searchInput">
+  </div>
+
+  <div id="lectureTree" class="subject-tree">
+    <div class="empty-state"><div class="ei">⏳</div><div class="et">Load ho raha hai...</div></div>
   </div>
 </div>
 
@@ -116,7 +128,7 @@
 <div class="pdf-modal-ov" id="pdfModal">
   <div class="pdf-modal-header">
     <div class="pdf-modal-title" id="pdfModalTitle">Lecture PDF</div>
-    <div class="pdf-modal-actions">
+    <div style="display:flex;gap:8px">
       <a id="pdfDlBtn" href="#" download class="btn btn-gold btn-sm">⬇ Download</a>
       <button class="btn btn-ghost btn-sm" onclick="closePDF()">✕ Band Karo</button>
     </div>
@@ -125,145 +137,182 @@
 </div>
 
 <div id="toast"></div>
-
 <script src="/socket.io/socket.io.js"></script>
 <script src="js/utils.js"></script>
 <script>
-let allLecs = [];
-let viewed = new Set(JSON.parse(localStorage.getItem('uniepr_viewed')||'[]'));
-let user = null;
-const socket = io();
+let allLecs=[];
+let viewed=new Set(JSON.parse(localStorage.getItem('uniepr_viewed')||'[]'));
+let user=null;
+const socket=io();
 
-(async () => {
-  user = await requireAuth('student');
-  if (!user) return;
+(async()=>{
+  user=await requireAuth('student');
+  if(!user) return;
   renderUserChip(user);
   await loadLectures();
   await checkActive();
 })();
 
-async function loadLectures() {
-  try {
-    allLecs = await api('GET','/api/lectures');
-    renderLecs(allLecs);
+async function loadLectures(){
+  try{
+    allLecs=await api('GET','/api/lectures');
+    renderTree(allLecs);
     updateStats(allLecs);
-  } catch(e) { toast('Lectures load nahi hui: '+e.message,'error'); }
+  }catch(e){toast('Load fail: '+e.message,'error');}
 }
 
-function renderLecs(lecs) {
-  const c = document.getElementById('lecList');
-  if (!lecs.length) {
-    c.innerHTML=`<div class="empty-state"><div class="ei">📭</div><div class="et">Koi PDF nahi abhi</div><div class="ed">Jab teacher lecture end karega, PDF yahan turant aa jaayegi.</div></div>`;
+function renderTree(lecs){
+  const container=document.getElementById('lectureTree');
+  const completed=lecs.filter(l=>l.pdf_path);
+  if(!completed.length){
+    container.innerHTML='<div class="empty-state"><div class="ei">📭</div><div class="et">Koi PDF nahi abhi</div><div>Jab teacher lecture end karega, PDF yahan aa jaayegi.</div></div>';
     return;
   }
-  c.innerHTML = lecs.map(l => {
-    const isNew = !viewed.has(l.id);
+
+  // Group: subject → unit → lectures (sorted by lecture_no)
+  const grouped={};
+  completed.forEach(l=>{
+    if(!grouped[l.subject]) grouped[l.subject]={};
+    if(!grouped[l.subject][l.unit_name||'General']) grouped[l.subject][l.unit_name||'General']=[];
+    grouped[l.subject][l.unit_name||'General'].push(l);
+  });
+
+  container.innerHTML=Object.entries(grouped).map(([subject,units])=>{
+    const allSubjectLecs=Object.values(units).flat();
+    const newCount=allSubjectLecs.filter(l=>!viewed.has(l.id)).length;
     return `
-    <div class="lec-card ${isNew?'is-new':''}" onclick="openLec('${l.id}')">
-      <div class="lec-left">
-        <div class="lec-icon">${subjectIcon(l.subject)}</div>
-        <div>
-          <div class="lec-title">${l.title}</div>
-          <div class="lec-meta">
-            <span>📘 ${l.subject}</span>
-            <span>👤 ${l.teacher_name}</span>
-            <span>🏫 ${l.class_name}</span>
-            <span>📅 ${fmtDate(l.created_at)}</span>
-            ${l.duration_min?`<span>⏱ ${l.duration_min} min</span>`:''}
-            ${l.slide_count?`<span>🖼 ${l.slide_count} slides</span>`:''}
+    <div class="subject-group">
+      <div class="subject-header" onclick="toggleSubject(this)">
+        <div class="subject-header-left">
+          <span class="subject-icon">${subjectIcon(subject)}</span>
+          <div>
+            <div class="subject-name">${subject}${newCount?`<span class="new-indicator"></span>`:''}</div>
+            <div class="subject-count">${allSubjectLecs.length} lectures · ${Object.keys(units).length} units</div>
           </div>
         </div>
+        <span class="subject-arrow">▼</span>
       </div>
-      <div class="lec-right">
-        ${isNew?`<span class="badge badge-new">NEW</span>`:''}
-        ${l.pdf_path
-          ? `<button class="btn btn-primary btn-sm" onclick="event.stopPropagation();openPDF('${l.pdf_path}','${l.title.replace(/'/g,"\\'")}','${l.id}')">📄 PDF Dekho</button>
-             <a href="${l.pdf_path}" download class="btn btn-ghost btn-sm" onclick="event.stopPropagation()">⬇</a>`
-          : `<span style="font-size:.75rem;color:var(--text3)">No PDF</span>`}
+      <div class="subject-body">
+        ${Object.entries(units).map(([unit,lecs])=>`
+          <div class="unit-group">
+            <div class="unit-header">
+              <span class="unit-icon">📂</span>
+              <span class="unit-name">${unit}</span>
+            </div>
+            ${lecs.sort((a,b)=>a.lecture_no-b.lecture_no).map(l=>{
+              const isNew=!viewed.has(l.id);
+              return `
+              <div class="lec-card ${isNew?'is-new':''}" onclick="openLec('${l.id}')">
+                <div class="lec-card-left">
+                  <span class="lec-num">L${l.lecture_no||'?'}</span>
+                  <div class="lec-info">
+                    <div class="lec-title">${l.title}</div>
+                    <div class="lec-meta">
+                      <span>👤 ${l.teacher_name}</span>
+                      <span>📅 ${fmtDate(l.created_at)}</span>
+                      ${l.duration_min?`<span>⏱ ${l.duration_min}min</span>`:''}
+                      ${l.slide_count?`<span>🖼 ${l.slide_count} slides</span>`:''}
+                    </div>
+                  </div>
+                </div>
+                <div class="lec-card-right">
+                  ${isNew?`<span class="badge badge-new">NEW</span>`:''}
+                  <button class="btn btn-primary btn-sm" onclick="event.stopPropagation();openPDF('${l.pdf_path}','${l.title.replace(/'/g,"\\'")}','${l.id}')">📄 PDF</button>
+                  <a href="${l.pdf_path}" download class="btn btn-ghost btn-sm" onclick="event.stopPropagation()">⬇</a>
+                </div>
+              </div>`;
+            }).join('')}
+          </div>
+        `).join('')}
       </div>
     </div>`;
   }).join('');
 }
 
-function updateStats(lecs) {
-  document.getElementById('statTotal').textContent = lecs.length;
-  document.getElementById('statNew').textContent = lecs.filter(l=>!viewed.has(l.id)).length;
-  document.getElementById('statSubjects').textContent = new Set(lecs.map(l=>l.subject)).size;
+function toggleSubject(header){
+  const body=header.nextElementSibling;
+  const arrow=header.querySelector('.subject-arrow');
+  const isOpen=body.classList.contains('open');
+  body.classList.toggle('open',!isOpen);
+  arrow.style.transform=isOpen?'':'rotate(180deg)';
 }
 
-function filter(type, btn) {
-  document.querySelectorAll('.ftab').forEach(t=>t.classList.remove('active'));
-  btn.classList.add('active');
-  let f = allLecs;
-  if (type==='new') f = allLecs.filter(l=>!viewed.has(l.id));
-  else if (type==='week') { const w=Date.now()-7*864e5; f=allLecs.filter(l=>new Date(l.created_at)>w); }
-  renderLecs(f);
+function updateStats(lecs){
+  const c=lecs.filter(l=>l.pdf_path);
+  document.getElementById('statTotal').textContent=c.length;
+  document.getElementById('statNew').textContent=c.filter(l=>!viewed.has(l.id)).length;
+  document.getElementById('statSubjects').textContent=new Set(c.map(l=>l.subject)).size;
 }
 
-function search(q) {
+function searchLectures(q){
   const ql=q.toLowerCase();
-  renderLecs(allLecs.filter(l=>
+  const filtered=q?allLecs.filter(l=>
     l.title.toLowerCase().includes(ql)||
     (l.subject||'').toLowerCase().includes(ql)||
-    (l.teacher_name||'').toLowerCase().includes(ql)
-  ));
+    (l.teacher_name||'').toLowerCase().includes(ql)||
+    (l.unit_name||'').toLowerCase().includes(ql)
+  ):allLecs;
+  renderTree(filtered);
 }
 
-function openLec(id) {
+function openLec(id){
   const l=allLecs.find(x=>x.id===id);
-  if (l?.pdf_path) openPDF(l.pdf_path, l.title, id);
+  if(l?.pdf_path) openPDF(l.pdf_path,l.title,id);
 }
 
-function openPDF(path, title, id) {
-  document.getElementById('pdfFrame').src = path;
-  document.getElementById('pdfModalTitle').textContent = title;
-  document.getElementById('pdfDlBtn').href = path;
+function openPDF(path,title,id){
+  document.getElementById('pdfFrame').src=path;
+  document.getElementById('pdfModalTitle').textContent=title;
+  document.getElementById('pdfDlBtn').href=path;
   document.getElementById('pdfModal').classList.add('open');
-  if (id) {
+  if(id){
     viewed.add(id);
-    localStorage.setItem('uniepr_viewed', JSON.stringify([...viewed]));
+    localStorage.setItem('uniepr_viewed',JSON.stringify([...viewed]));
     updateStats(allLecs);
   }
 }
 
-function closePDF() {
+function closePDF(){
   document.getElementById('pdfModal').classList.remove('open');
   document.getElementById('pdfFrame').src='about:blank';
-  renderLecs(allLecs);
+  renderTree(allLecs);
 }
 
-document.getElementById('pdfModal').addEventListener('click', function(e){ if(e.target===this) closePDF(); });
-document.addEventListener('keydown', e=>{ if(e.key==='Escape') closePDF(); });
+document.getElementById('pdfModal').addEventListener('click',function(e){if(e.target===this)closePDF();});
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closePDF();});
 
-async function checkActive() {
-  try {
-    const l = await api('GET','/api/lecture/active');
-    if (l) showLiveBanner(l);
-  } catch{}
+async function checkActive(){
+  try{
+    const l=await api('GET','/api/lecture/active');
+    if(l){
+      document.getElementById('liveBannerWrap').style.display='block';
+      document.getElementById('liveIndicator').style.display='inline-flex';
+      document.getElementById('liveBannerTitle').textContent=`🔴 LIVE: ${l.title} — ${l.subject} (${l.class_name})`;
+    }
+  }catch{}
 }
 
-function showLiveBanner(l) {
+socket.on('lecture:started',l=>{
   document.getElementById('liveBannerWrap').style.display='block';
   document.getElementById('liveIndicator').style.display='inline-flex';
-  document.getElementById('liveBannerTitle').textContent=`🔴 LIVE: ${l.title} — ${l.subject} (${l.class_name})`;
-}
-
-function hideLiveBanner() {
-  document.getElementById('liveBannerWrap').style.display='none';
-  document.getElementById('liveIndicator').style.display='none';
-}
-
-// Real-time events
-socket.on('lecture:started', l => { showLiveBanner(l); toast(`🔴 Lecture shuru: ${l.title}`,'info'); });
-socket.on('lecture:ended', async ({ lectureId }) => {
-  hideLiveBanner();
-  await loadLectures();
-  const l = allLecs.find(x=>x.id===lectureId);
-  toast(`📄 Nayi PDF: "${l?.title||'Lecture'}" — download kar sakte ho!`,'success');
+  document.getElementById('liveBannerTitle').textContent=`🔴 LIVE: ${l.title} — ${l.subject}`;
+  toast(`🔴 Lecture shuru: ${l.title}`,'info');
 });
 
-// Auto refresh every 60s
-setInterval(loadLectures, 60000);
+socket.on('lecture:ended',async()=>{
+  document.getElementById('liveBannerWrap').style.display='none';
+  document.getElementById('liveIndicator').style.display='none';
+  await loadLectures();
+  toast('📄 Nayi PDF aa gayi! Dashboard mein dekho.','success');
+});
+
+socket.on('lecture:deleted',({lectureId})=>{
+  allLecs=allLecs.filter(l=>l.id!==lectureId);
+  renderTree(allLecs);
+  updateStats(allLecs);
+});
+
+setInterval(loadLectures,60000);
 </script>
 </body>
 </html>
