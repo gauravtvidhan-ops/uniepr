@@ -1,127 +1,204 @@
-# UniEPR — Lecture Capture System
+# UniEPR — Smart Lecture Capture System
 
-Teacher smartboard pe screen share karta hai → slides capture karta hai → PDF ban ke students ke dashboard pe aa jaati hai.
+> **Teacher boards pe padhao. Students ko PDF milti hai. Automatically.**
 
----
-
-## 🚀 Railway pe Deploy kaise karein (Free)
-
-### Step 1 — GitHub pe daalo
-```bash
-cd uniepr
-git init
-git add .
-git commit -m "UniEPR v2 — lecture capture system"
-# GitHub pe naya repo banao, phir:
-git remote add origin https://github.com/YOUR_USERNAME/uniepr.git
-git push -u origin main
-```
-
-### Step 2 — Railway pe jao
-1. **railway.app** pe jao → GitHub se login karo
-2. **"New Project"** → **"Deploy from GitHub repo"** → apna repo chunao
-3. Railway automatically detect karega ki Node.js project hai
-4. **Deploy** click karo — 2-3 minute mein live ho jaayega
-
-### Step 3 — PostgreSQL add karo
-1. Railway dashboard mein apne project pe jao
-2. **"+ New"** → **"Database"** → **"PostgreSQL"** select karo
-3. PostgreSQL add hone ke baad, **Variables** tab mein jao
-4. `DATABASE_URL` automatically set ho jaayegi ✅
-
-### Step 4 — Environment Variables set karo
-Railway dashboard → apna service → **Variables** tab:
-```
-JWT_SECRET = koi-bhi-lamba-random-string-jaise-uniepr2024secretkey
-```
-
-### Step 5 — Done! 🎉
-Railway ek URL dega jaise: `https://uniepr-production.up.railway.app`
-
-Yahi URL teachers aur students use karenge.
+[![Live Demo](https://img.shields.io/badge/Live%20Demo-Railway-blueviolet?style=for-the-badge)](https://uniepr-production.up.railway.app)
+[![Node.js](https://img.shields.io/badge/Node.js-18+-green?style=for-the-badge&logo=node.js)](https://nodejs.org)
+[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-Database-blue?style=for-the-badge&logo=postgresql)](https://postgresql.org)
+[![Socket.io](https://img.shields.io/badge/Socket.io-Realtime-black?style=for-the-badge&logo=socket.io)](https://socket.io)
 
 ---
 
-## 💻 Local Development
+## The Problem
 
-```bash
-# 1. Dependencies install karo
-npm install
+Every day in colleges across India:
 
-# 2. .env file banao
-cp .env.example .env
-# .env mein DATABASE_URL ya DB_ variables set karo
+- Teachers write on smartboards — students scramble to copy notes
+- "Sir notes bhejo WhatsApp pe" — every student, every class
+- Students who miss class have no way to get the content
+- Teachers waste time re-sharing, re-explaining, re-sending
 
-# 3. PostgreSQL locally chahiye (ya Railway ka URL use karo)
-
-# 4. Run karo
-npm run dev   # development (auto-restart)
-npm start     # production
-```
+**Notes sharing is broken. We fixed it.**
 
 ---
 
-## 📁 Project Structure
+## The Solution
+
+UniEPR captures every lecture automatically and delivers a clean PDF to every student's dashboard — the moment class ends.
 
 ```
-uniepr/
-├── server.js          # Express backend + Socket.io
-├── db.js              # PostgreSQL setup + schema
-├── auth.js            # JWT middleware
-├── package.json
-├── .env.example
-├── uploads/
-│   └── lectures/      # PDFs yahan store hongi
-└── public/
-    ├── index.html     # Landing page
-    ├── login.html     # Login page
-    ├── register.html  # Register page
-    ├── teacher.html   # Teacher portal
-    ├── student.html   # Student dashboard
-    ├── css/style.css
-    └── js/utils.js
+Teacher starts lecture → shares smartboard screen
+         ↓
+Teacher uses phone to capture slides (one tap)
+         ↓
+Teacher ends lecture
+         ↓
+System generates PDF from all captured slides
+         ↓
+PDF appears on every student's dashboard instantly
 ```
+
+**Zero extra effort for teachers. Zero missed notes for students.**
 
 ---
 
-## 👥 Roles & Flow
+## Live Demo
 
-**Teacher:**
-1. `/login` → teacher@demo.com / teacher123
-2. Title, subject, class bharo
-3. "Lecture Shuru Karo" → screen share select karo
-4. Board pe padhao → "Capture Slide" dabao (ya Spacebar)
-5. "Lecture Khatam Karo" → PDF automatically upload
-
-**Student:**
-1. `/login` → student@demo.com / student123
-2. Dashboard pe apne subjects ke lectures dikhenge
-3. "PDF Dekho" → in-browser viewer
-4. "⬇" → download
-
----
-
-## 🔑 Demo Accounts (auto-created)
+Live: https://uniepr-production.up.railway.app
 
 | Role | Email | Password |
 |------|-------|----------|
 | Teacher | teacher@demo.com | teacher123 |
-| Teacher | teacher2@demo.com | teacher123 |
 | Student | student@demo.com | student123 |
-| Student | student2@demo.com | student123 |
-| Student | student3@demo.com | student123 |
+
+Try it:
+1. Login as Teacher → Start a lecture → Open `/capture` on your phone
+2. Tap Capture a few times on your phone
+3. End lecture → PDF generates
+4. Login as Student → See the PDF instantly
 
 ---
 
-## ⚡ Tech Stack
+## Architecture
 
-| Layer | Tech |
-|-------|------|
+```
+┌─────────────────────────────────────────────────┐
+│                  CLIENT SIDE                     │
+│                                                  │
+│  Smartboard          Phone         Student       │
+│  teacher.html    capture.html   student.html     │
+│  Screen Share +   One-tap       View & Download  │
+│  PDF Generation   Capture       PDF Dashboard    │
+└──────────┬──────────────┬──────────────┬─────────┘
+           │              │              │
+           ▼              ▼              ▼
+┌─────────────────────────────────────────────────┐
+│             SERVER (Node.js + Express)           │
+│                                                  │
+│  REST API          +       Socket.io             │
+│  /api/auth/*               Real-time events      │
+│  /api/lecture/start        lecture:started       │
+│  /api/lecture/trigger      capture:trigger       │
+│  /api/lecture/end          lecture:ended         │
+│  /api/lectures             PDF notification      │
+└──────────────────────┬──────────────────────────┘
+                       │
+                       ▼
+           ┌───────────────────────┐
+           │  PostgreSQL Database  │
+           │  users + lectures     │
+           └───────────────────────┘
+```
+
+---
+
+## Key Features
+
+### For Teachers
+- One-click lecture start
+- Phone as wireless remote — tap to capture from phone, smartboard captures automatically
+- Real-time slide strip with thumbnails
+- PDF preview before uploading
+- Zero tab switching — teach on PPT, capture from phone
+
+### For Students
+- Instant PDF delivery — appears the moment teacher ends lecture
+- Subject-wise filtering — only see lectures for your subjects
+- NEW badge for unread lectures
+- In-browser PDF viewer + download
+- Real-time notification when new lecture arrives
+
+### Auth & Security
+- JWT-based authentication with HTTP-only cookies
+- Role-based access control (Teacher / Student)
+- Subject-wise content filtering per student
+- bcrypt password hashing
+
+---
+
+## Tech Stack
+
+| Layer | Technology |
+|-------|-----------|
 | Backend | Node.js + Express |
-| Database | PostgreSQL (Railway addon) |
 | Real-time | Socket.io |
+| Database | PostgreSQL |
 | Auth | JWT + bcryptjs |
+| PDF Generation | jsPDF (client-side, no server cost) |
 | Screen Capture | Browser Screen Capture API |
-| PDF Generation | jsPDF (client-side) |
-| File Upload | Multer |
-| Hosting | Railway (free tier) |
+| Hosting | Railway |
+
+---
+
+## Project Structure
+
+```
+uniepr/
+├── server.js           # Express + Socket.io + all API routes
+├── db.js               # PostgreSQL schema + seed data
+├── auth.js             # JWT middleware + role guards
+├── package.json
+├── .env.example
+└── public/
+    ├── index.html      # Landing page
+    ├── login.html      # Login
+    ├── register.html   # Register with subject selection
+    ├── teacher.html    # Lecture capture portal (smartboard)
+    ├── capture.html    # Mobile remote capture page (phone)
+    ├── student.html    # Student PDF dashboard
+    ├── css/style.css   # Global dark theme
+    └── js/utils.js     # Shared auth + API utilities
+```
+
+---
+
+## Run Locally
+
+```bash
+git clone https://github.com/gauravtvidhan-ops/uniepr.git
+cd uniepr
+npm install
+cp .env.example .env
+# Add DATABASE_URL and JWT_SECRET to .env
+npm run dev
+```
+
+---
+
+## Deploy on Railway (Free)
+
+1. Fork this repo
+2. railway.app → New Project → Deploy from GitHub
+3. Add PostgreSQL addon (DATABASE_URL auto-sets)
+4. Add variable: JWT_SECRET=your-secret-key
+5. Done!
+
+---
+
+## Roadmap
+
+- Auto-capture with visual change detection
+- End-lecture slide preview and reorder
+- Admin dashboard for HOD/Principal
+- Attendance marking during lecture
+- Quiz at end of lecture
+- Push notifications (PWA)
+- AI-generated lecture summaries
+- Cloud storage (S3/Cloudflare R2)
+- Parent portal
+- Timetable integration
+
+---
+
+## Impact
+
+| What | Result |
+|------|--------|
+| Teacher setup time | Less than 2 minutes |
+| Extra effort per lecture | Zero (just tap phone) |
+| Student wait time for notes | Under 30 seconds after class |
+| Works on any smartboard | Yes, any Chrome browser |
+
+---
+
+Built for students who deserve better notes.
