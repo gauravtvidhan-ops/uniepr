@@ -56,6 +56,13 @@ const uploadDirect = multer({
 });
 
 const active = {};
+const captureCodes = {};
+function generateCode() {
+  const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+  let code = "";
+  for (let i = 0; i < 6; i++) code += chars[Math.floor(Math.random() * chars.length)];
+  return code;
+}
 
 // ══════════════════════════════════════════════════
 //  AUTH
@@ -125,8 +132,12 @@ app.post('/api/lecture/start', authMiddleware, requireRole('teacher'), async (re
     );
     const lec = rows[0];
     active[lec.id] = { startTime: Date.now(), slideCount: 0 };
+    // Generate unique capture code
+    const code = generateCode();
+    captureCodes[code] = lec.id;
+    setTimeout(() => delete captureCodes[code], 6 * 60 * 60 * 1000); // expire in 6hrs
     io.emit('lecture:started', lec);
-    res.json({ success: true, lecture: lec });
+    res.json({ success: true, lecture: lec, captureCode: code });
   } catch (e) { console.error(e); res.status(500).json({ error: 'Server error' }); }
 });
 
@@ -140,6 +151,20 @@ app.post('/api/lecture/slide', authMiddleware, requireRole('teacher'), (req, res
 app.post('/api/lecture/trigger-capture', authMiddleware, requireRole('teacher'), (req, res) => {
   const { lectureId } = req.body;
   if (!lectureId) return res.status(400).json({ error: 'lectureId required' });
+  io.emit('capture:trigger', { lectureId });
+  res.json({ success: true });
+});
+
+// No-login capture trigger via code
+app.get('/api/capture-code/:code', (req, res) => {
+  const lectureId = captureCodes[req.params.code.toUpperCase()];
+  if (!lectureId) return res.status(404).json({ error: 'Code galat hai ya expire ho gaya' });
+  res.json({ success: true, lectureId });
+});
+
+app.post('/api/capture-code/:code/trigger', (req, res) => {
+  const lectureId = captureCodes[req.params.code.toUpperCase()];
+  if (!lectureId) return res.status(404).json({ error: 'Code galat hai ya expire ho gaya' });
   io.emit('capture:trigger', { lectureId });
   res.json({ success: true });
 });
@@ -251,6 +276,7 @@ app.get('/register', (_, r) => r.sendFile(pub('register.html')));
 app.get('/teacher',  (_, r) => r.sendFile(pub('teacher.html')));
 app.get('/student',  (_, r) => r.sendFile(pub('student.html')));
 app.get('/capture',  (_, r) => r.sendFile(pub('capture.html')));
+app.get('/c/:code',  (_, r) => r.sendFile(pub('capture.html')));
 
 // SOCKET
 io.on('connection', (s) => {
