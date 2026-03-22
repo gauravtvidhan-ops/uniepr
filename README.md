@@ -99,7 +99,6 @@ Try it:
 - Phone as wireless remote — tap to capture from phone, smartboard captures automatically
 - Real-time slide strip with thumbnails
 - PDF preview before uploading
-- Zero tab switching — teach on PPT, capture from phone
 
 ### For Students
 - Instant PDF delivery — appears the moment teacher ends lecture
@@ -163,30 +162,6 @@ cp .env.example .env
 npm run dev
 ```
 
----
-
-## Deploy on Railway (Free)
-
-1. Fork this repo
-2. railway.app → New Project → Deploy from GitHub
-3. Add PostgreSQL addon (DATABASE_URL auto-sets)
-4. Add variable: JWT_SECRET=your-secret-key
-5. Done!
-
----
-
-## Roadmap
-
-- Auto-capture with visual change detection
-- End-lecture slide preview and reorder
-- Admin dashboard for HOD/Principal
-- Attendance marking during lecture
-- Quiz at end of lecture
-- Push notifications (PWA)
-- AI-generated lecture summaries
-- Cloud storage (S3/Cloudflare R2)
-- Parent portal
-- Timetable integration
 
 ---
 
