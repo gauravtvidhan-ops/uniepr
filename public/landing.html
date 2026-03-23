@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>ShikshaLabs — Smart Education Platform</title>
+<link href="https://fonts.googleapis.com/css2?family=Cabinet+Grotesk:wght@400;500;700;800;900&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0a0c10;--surface:#12151d;--surface2:#181c28;
+  --border:#1e2336;--border2:#252d45;
+  --text:#eceef5;--text2:#7b849e;--text3:#454e6a;
+  --accent:#4f7cff;--green:#22c55e;--gold:#f59e0b;--cyan:#06b6d4;--purple:#8b5cf6;
+  --red:#ef4444;
+}
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box;}
+html{scroll-behavior:smooth;}
+body{font-family:'Cabinet Grotesk',sans-serif;background:var(--bg);color:var(--text);overflow-x:hidden;}
+::-webkit-scrollbar{width:5px}::-webkit-scrollbar-track{background:var(--surface)}::-webkit-scrollbar-thumb{background:var(--border2);border-radius:3px}
+
+a{text-decoration:none;color:inherit;}
+
+/* ── NAV ── */
+nav{
+  position:fixed;top:0;left:0;right:0;z-index:100;
+  padding:16px 48px;
+  display:flex;align-items:center;justify-content:space-between;
+  background:rgba(10,12,16,0.85);
+  backdrop-filter:blur(20px);
+  border-bottom:1px solid var(--border);
+}
+.nav-logo{
+  font-weight:900;font-size:1.3rem;letter-spacing:-1px;
+  background:linear-gradient(135deg,var(--accent),var(--cyan));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+}
+.nav-links{display:flex;align-items:center;gap:32px;}
+.nav-links a{font-size:.875rem;font-weight:600;color:var(--text2);transition:color .15s;}
+.nav-links a:hover{color:var(--text);}
+.nav-cta{
+  padding:9px 22px;background:var(--accent);border-radius:8px;
+  font-size:.875rem;font-weight:700;color:#fff!important;
+  transition:all .2s;
+}
+.nav-cta:hover{background:#3b5fe0;transform:translateY(-1px);}
+
+/* ── HERO ── */
+.hero{
+  min-height:100vh;display:flex;flex-direction:column;align-items:center;
+  justify-content:center;text-align:center;padding:120px 24px 80px;
+  position:relative;overflow:hidden;
+}
+
+.hero-bg{position:absolute;inset:0;pointer-events:none;}
+.orb{position:absolute;border-radius:50%;filter:blur(100px);opacity:.15;}
+.orb1{width:600px;height:600px;background:#4f7cff;top:-200px;left:-200px;}
+.orb2{width:500px;height:500px;background:#8b5cf6;bottom:-150px;right:-150px;}
+.orb3{width:300px;height:300px;background:#06b6d4;top:40%;left:60%;}
+.grid{
+  position:absolute;inset:0;
+  background-image:linear-gradient(rgba(255,255,255,.02) 1px,transparent 1px),
+                   linear-gradient(90deg,rgba(255,255,255,.02) 1px,transparent 1px);
+  background-size:60px 60px;
+}
+
+.hero-badge{
+  display:inline-flex;align-items:center;gap:8px;
+  background:rgba(79,124,255,.1);border:1px solid rgba(79,124,255,.2);
+  border-radius:20px;padding:6px 16px;
+  font-family:'JetBrains Mono',monospace;font-size:.72rem;
+  letter-spacing:1.5px;color:var(--accent);margin-bottom:28px;
+}
+.hero-badge .dot{width:6px;height:6px;border-radius:50%;background:var(--green);animation:blink 2s infinite;}
+@keyframes blink{0%,100%{opacity:1;}50%{opacity:.3;}}
+
+.hero h1{
+  font-size:clamp(2.5rem,6vw,5rem);font-weight:900;
+  letter-spacing:-3px;line-height:1;margin-bottom:24px;
+  position:relative;z-index:1;
+}
+.hero h1 .grad{
+  background:linear-gradient(135deg,var(--accent) 0%,var(--cyan) 50%,var(--purple) 100%);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+}
+
+.hero p{
+  font-size:1.15rem;color:var(--text2);max-width:560px;
+  line-height:1.7;margin-bottom:40px;position:relative;z-index:1;
+}
+
+.hero-ctas{display:flex;gap:14px;justify-content:center;flex-wrap:wrap;position:relative;z-index:1;}
+.btn-hero{
+  padding:14px 32px;border-radius:12px;font-family:'Cabinet Grotesk',sans-serif;
+  font-size:1rem;font-weight:700;cursor:pointer;transition:all .2s;
+  display:inline-flex;align-items:center;gap:8px;border:none;
+}
+.btn-hero-primary{background:var(--accent);color:#fff;}
+.btn-hero-primary:hover{background:#3b5fe0;transform:translateY(-2px);box-shadow:0 8px 24px rgba(79,124,255,.35);}
+.btn-hero-ghost{background:transparent;color:var(--text2);border:1px solid var(--border2);}
+.btn-hero-ghost:hover{background:var(--surface);color:var(--text);}
+
+.hero-stats{
+  display:flex;gap:48px;margin-top:64px;justify-content:center;
+  position:relative;z-index:1;
+}
+.hs{text-align:center;}
+.hs-num{font-family:'JetBrains Mono',monospace;font-size:2rem;font-weight:700;color:var(--text);}
+.hs-label{font-size:.75rem;color:var(--text3);text-transform:uppercase;letter-spacing:1px;margin-top:4px;}
+
+/* ── PRODUCTS ── */
+.section{padding:100px 48px;max-width:1100px;margin:0 auto;}
+.section-badge{
+  display:inline-flex;align-items:center;gap:6px;
+  background:var(--surface2);border:1px solid var(--border2);
+  border-radius:20px;padding:5px 14px;
+  font-family:'JetBrains Mono',monospace;font-size:.68rem;
+  letter-spacing:1px;color:var(--text3);text-transform:uppercase;
+  margin-bottom:16px;
+}
+.section h2{font-size:clamp(1.8rem,4vw,3rem);font-weight:900;letter-spacing:-1.5px;margin-bottom:12px;}
+.section .section-sub{font-size:1rem;color:var(--text2);line-height:1.7;margin-bottom:56px;max-width:560px;}
+
+.products-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:20px;}
+
+.product-card{
+  background:var(--surface);border:1px solid var(--border2);
+  border-radius:20px;padding:32px;
+  transition:all .25s;position:relative;overflow:hidden;
+}
+.product-card::before{
+  content:'';position:absolute;inset:0;
+  background:linear-gradient(135deg,var(--pc-color,var(--accent)) 0%,transparent 50%);
+  opacity:0;transition:opacity .25s;
+}
+.product-card:hover{transform:translateY(-4px);box-shadow:0 12px 40px rgba(0,0,0,.4);border-color:var(--pc-color,var(--accent));}
+.product-card:hover::before{opacity:.06;}
+
+.pc-icon{font-size:2.2rem;margin-bottom:20px;}
+.pc-status{
+  display:inline-flex;align-items:center;gap:5px;
+  font-family:'JetBrains Mono',monospace;font-size:.65rem;
+  letter-spacing:1px;text-transform:uppercase;
+  padding:3px 10px;border-radius:20px;margin-bottom:16px;
+}
+.pc-status.live{background:rgba(34,197,94,.1);color:var(--green);border:1px solid rgba(34,197,94,.2);}
+.pc-status.building{background:rgba(245,158,11,.1);color:var(--gold);border:1px solid rgba(245,158,11,.2);}
+.pc-status.planned{background:var(--surface2);color:var(--text3);border:1px solid var(--border2);}
+
+.pc-title{font-size:1.3rem;font-weight:800;margin-bottom:8px;}
+.pc-desc{font-size:.875rem;color:var(--text2);line-height:1.6;margin-bottom:20px;}
+.pc-features{list-style:none;display:flex;flex-direction:column;gap:6px;}
+.pc-features li{font-size:.82rem;color:var(--text2);display:flex;align-items:center;gap:8px;}
+.pc-features li::before{content:'→';color:var(--pc-color,var(--accent));font-weight:700;}
+
+/* ── HOW IT WORKS ── */
+.how-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px;}
+.how-step{
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:16px;padding:24px;text-align:center;
+}
+.how-num{
+  width:40px;height:40px;border-radius:50%;
+  background:rgba(79,124,255,.1);border:1px solid rgba(79,124,255,.2);
+  font-family:'JetBrains Mono',monospace;font-weight:700;font-size:.9rem;color:var(--accent);
+  display:flex;align-items:center;justify-content:center;margin:0 auto 16px;
+}
+.how-icon{font-size:1.8rem;margin-bottom:12px;}
+.how-title{font-size:.9rem;font-weight:800;margin-bottom:6px;}
+.how-desc{font-size:.8rem;color:var(--text2);line-height:1.5;}
+
+/* ── CTA ── */
+.cta-section{
+  margin:0 48px 100px;
+  background:linear-gradient(135deg,var(--surface) 0%,var(--surface2) 100%);
+  border:1px solid var(--border2);border-radius:24px;
+  padding:64px 48px;text-align:center;
+  position:relative;overflow:hidden;
+}
+.cta-section::before{
+  content:'';position:absolute;inset:0;
+  background:radial-gradient(ellipse at 50% 0%,rgba(79,124,255,.1) 0%,transparent 70%);
+  pointer-events:none;
+}
+.cta-section h2{font-size:clamp(1.5rem,3vw,2.5rem);font-weight:900;letter-spacing:-1px;margin-bottom:12px;position:relative;z-index:1;}
+.cta-section p{font-size:1rem;color:var(--text2);margin-bottom:32px;position:relative;z-index:1;}
+
+/* ── FOOTER ── */
+footer{
+  border-top:1px solid var(--border);
+  padding:32px 48px;
+  display:flex;align-items:center;justify-content:space-between;
+  flex-wrap:wrap;gap:16px;
+}
+.footer-logo{font-weight:900;font-size:1rem;letter-spacing:-0.5px;background:linear-gradient(135deg,var(--accent),var(--cyan));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
+.footer-copy{font-size:.78rem;color:var(--text3);font-family:'JetBrains Mono',monospace;}
+
+@media(max-width:768px){
+  nav{padding:14px 20px;}
+  .nav-links{display:none;}
+  .section{padding:60px 20px;}
+  .hero{padding:100px 20px 60px;}
+  .hero-stats{gap:24px;}
+  .cta-section{margin:0 20px 60px;padding:40px 24px;}
+  footer{padding:24px 20px;}
+}
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <div class="nav-logo">ShikshaLabs</div>
+  <div class="nav-links">
+    <a href="#products">Products</a>
+    <a href="#how">How it works</a>
+    <a href="/login" class="nav-cta">Login →</a>
+  </div>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-bg">
+    <div class="orb orb1"></div>
+    <div class="orb orb2"></div>
+    <div class="orb orb3"></div>
+    <div class="grid"></div>
+  </div>
+
+  <div class="hero-badge"><div class="dot"></div>NOW LIVE AT PILOT COLLEGE</div>
+
+  <h1>
+    Education ka<br>
+    <span class="grad">future, abhi.</span>
+  </h1>
+
+  <p>
+    ShikshaLabs builds smart tools for teachers and students — 
+    automatic lecture PDFs, QR attendance, and more. 
+    Zero extra effort. Maximum impact.
+  </p>
+
+  <div class="hero-ctas">
+    <a href="/login" class="btn-hero btn-hero-primary">🚀 Get Started — Free</a>
+    <a href="#products" class="btn-hero btn-hero-ghost">See Products →</a>
+  </div>
+
+  <div class="hero-stats">
+    <div class="hs">
+      <div class="hs-num">0s</div>
+      <div class="hs-label">Extra teacher effort</div>
+    </div>
+    <div class="hs">
+      <div class="hs-num">&lt;30s</div>
+      <div class="hs-label">PDF delivery time</div>
+    </div>
+    <div class="hs">
+      <div class="hs-num">100%</div>
+      <div class="hs-label">Browser based</div>
+    </div>
+  </div>
+</section>
+
+<!-- PRODUCTS -->
+<div id="products" style="background:var(--surface);border-top:1px solid var(--border);border-bottom:1px solid var(--border);">
+<div class="section">
+  <div class="section-badge">📦 Products</div>
+  <h2>Ek platform.<br>Sab kuch.</h2>
+  <p class="section-sub">Teacher ka poora workflow — lecture se attendance tak — ek jagah.</p>
+
+  <div class="products-grid">
+
+    <div class="product-card" style="--pc-color:#4f7cff">
+      <div class="pc-icon">📄</div>
+      <div class="pc-status live"><span style="width:6px;height:6px;border-radius:50%;background:var(--green);display:inline-block;animation:blink 1.5s infinite"></span>LIVE</div>
+      <div class="pc-title">UniEPR</div>
+      <div class="pc-desc">Smart lecture capture system. Teacher padhata rahe — PDF automatically ban ke students tak pahunch jaati hai.</div>
+      <ul class="pc-features">
+        <li>Screen capture → PDF generation</li>
+        <li>Phone remote via QR code</li>
+        <li>Subject/Unit wise library</li>
+        <li>Real-time delivery to students</li>
+      </ul>
+    </div>
+
+    <div class="product-card" style="--pc-color:#22c55e">
+      <div class="pc-icon">✅</div>
+      <div class="pc-status live"><span style="width:6px;height:6px;border-radius:50%;background:var(--green);display:inline-block;animation:blink 1.5s infinite"></span>LIVE</div>
+      <div class="pc-title">SmartAttend</div>
+      <div class="pc-desc">QR based attendance system. Teacher QR generate kare — students scan karein — attendance automatic.</div>
+      <ul class="pc-features">
+        <li>QR code on smartboard</li>
+        <li>Students scan in 10 seconds</li>
+        <li>Live count for teacher</li>
+        <li>Full attendance history</li>
+      </ul>
+    </div>
+
+    <div class="product-card" style="--pc-color:#f59e0b">
+      <div class="pc-icon">📝</div>
+      <div class="pc-status building">🔨 BUILDING</div>
+      <div class="pc-title">QuizFlow</div>
+      <div class="pc-desc">End-of-lecture quick quiz. Teacher ek question dalein — students turant jawab dein — instant results.</div>
+      <ul class="pc-features">
+        <li>MCQ + short answer</li>
+        <li>Real-time responses</li>
+        <li>Auto grading</li>
+        <li>Performance analytics</li>
+      </ul>
+    </div>
+
+    <div class="product-card" style="--pc-color:#8b5cf6">
+      <div class="pc-icon">📊</div>
+      <div class="pc-status planned">PLANNED</div>
+      <div class="pc-title">InsightBoard</div>
+      <div class="pc-desc">Analytics dashboard for HOD & Principal. Attendance trends, lecture coverage, student performance — sab ek jagah.</div>
+      <ul class="pc-features">
+        <li>Department-wise reports</li>
+        <li>Attendance analytics</li>
+        <li>Parent notifications</li>
+        <li>Export to Excel/PDF</li>
+      </ul>
+    </div>
+
+  </div>
+</div>
+</div>
+
+<!-- HOW IT WORKS -->
+<div id="how">
+<div class="section">
+  <div class="section-badge">⚡ How it works</div>
+  <h2>Itna simple<br>hai yeh.</h2>
+  <p class="section-sub">Teacher ko kuch extra nahi seekhna. Students ko kuch install nahi karna. Bas chalao.</p>
+
+  <div class="how-grid">
+    <div class="how-step">
+      <div class="how-num">1</div>
+      <div class="how-icon">🔐</div>
+      <div class="how-title">Login karo</div>
+      <div class="how-desc">Teacher ya student — apna account banao. Subjects select karo. Done.</div>
+    </div>
+    <div class="how-step">
+      <div class="how-num">2</div>
+      <div class="how-icon">🎬</div>
+      <div class="how-title">Lecture shuru karo</div>
+      <div class="how-desc">Title, subject, class — fill karo. Screen share karo. Padhana shuru.</div>
+    </div>
+    <div class="how-step">
+      <div class="how-num">3</div>
+      <div class="how-icon">📱</div>
+      <div class="how-title">Phone se capture</div>
+      <div class="how-desc">6-digit code phone pe daalo. Tap karo jab slide complete ho. Koi tab switch nahi.</div>
+    </div>
+    <div class="how-step">
+      <div class="how-num">4</div>
+      <div class="how-icon">✅</div>
+      <div class="how-title">Attendance lo</div>
+      <div class="how-desc">QR code smartboard pe — students scan karein — 30 seconds mein poori class.</div>
+    </div>
+    <div class="how-step">
+      <div class="how-num">5</div>
+      <div class="how-icon">📄</div>
+      <div class="how-title">PDF ready</div>
+      <div class="how-desc">Lecture end karo — PDF ban ke students ke dashboard pe aa jaati hai instantly.</div>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- CTA -->
+<div class="cta-section">
+  <h2>Apne college mein<br>try karo — free hai.</h2>
+  <p>Koi credit card nahi. Koi installation nahi. Sirf ek browser.</p>
+  <div style="display:flex;gap:14px;justify-content:center;flex-wrap:wrap;position:relative;z-index:1;">
+    <a href="/register" class="btn-hero btn-hero-primary">🎓 Register Now — Free</a>
+    <a href="/login" class="btn-hero btn-hero-ghost">Already have account? Login →</a>
+  </div>
+</div>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-logo">ShikshaLabs</div>
+  <div class="footer-copy">© 2026 ShikshaLabs · Built for India's classrooms</div>
+</footer>
+
+</body>
+</html>

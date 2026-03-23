@@ -148,6 +148,26 @@
 .lec-row-right{display:flex;align-items:center;gap:8px;flex-shrink:0}
 .progress-wrap{height:6px;background:var(--surface2);border-radius:3px;overflow:hidden}
 .progress-fill{height:100%;border-radius:3px;background:linear-gradient(90deg,var(--accent),var(--cyan));transition:width .4s}
+
+/* ── ATTENDANCE ── */
+.qr-wrap{display:flex;flex-direction:column;align-items:center;gap:16px;padding:24px}
+.qr-box{background:#fff;border-radius:16px;padding:20px;box-shadow:var(--shadow)}
+.qr-box img{width:220px;height:220px;display:block}
+.qr-code-text{font-family:'JetBrains Mono',monospace;font-size:.75rem;color:var(--text3);word-break:break-all;text-align:center;max-width:260px}
+.att-url{font-size:.75rem;color:var(--accent);font-family:'JetBrains Mono',monospace;background:var(--surface2);border-radius:8px;padding:8px 14px;word-break:break-all;text-align:center;cursor:pointer}
+.att-url:hover{background:var(--surface3)}
+.att-live-count{font-family:'JetBrains Mono',monospace;font-size:3rem;font-weight:700;color:var(--green);text-align:center}
+.att-live-label{font-size:.72rem;color:var(--text3);text-transform:uppercase;letter-spacing:1px;text-align:center;font-family:'JetBrains Mono',monospace}
+.att-student-list{max-height:300px;overflow-y:auto;display:flex;flex-direction:column;gap:6px}
+.att-student-item{display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:var(--surface2);border-radius:8px;font-size:.82rem;animation:slideIn .3s ease}
+.att-student-item .asi-name{font-weight:700}
+.att-student-item .asi-time{font-family:'JetBrains Mono',monospace;font-size:.7rem;color:var(--text3)}
+.att-sessions{display:flex;flex-direction:column;gap:10px}
+.att-session-card{background:var(--surface2);border-radius:12px;padding:16px;display:flex;align-items:center;justify-content:space-between;gap:12px}
+.asc-left .asc-title{font-weight:800;font-size:.875rem}
+.asc-left .asc-meta{font-size:.75rem;color:var(--text2);margin-top:3px;font-family:'JetBrains Mono',monospace}
+.asc-right{display:flex;align-items:center;gap:8px;flex-shrink:0}
+
 </style>
 </head>
 <body>
@@ -170,6 +190,7 @@
     <button class="tab active" onclick="switchTab('start',this)">🎬 Lecture Shuru Karo</button>
     <button class="tab" onclick="switchTab('myLectures',this)">📚 Meri Lectures</button>
     <button class="tab" onclick="switchTab('upload',this)">⬆️ PDF Upload Karo</button>
+    <button class="tab" onclick="switchTab('attendance',this)">✅ Attendance</button>
   </div>
 
   <!-- TAB 1: Start Lecture -->
@@ -308,6 +329,73 @@
       <button class="btn btn-primary btn-lg w-full" onclick="uploadPDF()" id="uploadBtn">⬆️ Upload Karo</button>
     </div>
   </div>
+
+  <!-- TAB 4: Attendance -->
+  <div id="tabAttendance" style="display:none">
+    <div class="tabs" style="margin-bottom:20px">
+      <button class="tab active" onclick="switchAttTab('take',this)">📋 Attendance Lo</button>
+      <button class="tab" onclick="switchAttTab('history',this)">📊 History</button>
+    </div>
+
+    <!-- Take Attendance -->
+    <div id="attTake">
+      <div id="attSetup" class="setup-card" style="margin:0 auto">
+        <h2>Attendance Session Shuru Karo</h2>
+        <p class="sub">QR code generate hoga — students scan karein aur attendance automatic mark ho jaayegi.</p>
+        <div class="field">
+          <label>Subject</label>
+          <select id="attSubject"><option value="">Subject chuniye</option></select>
+        </div>
+        <div class="field">
+          <label>Class / Section</label>
+          <input type="text" id="attClass" placeholder="e.g. CSE-6A">
+        </div>
+        <div class="err" id="attErr"></div>
+        <button class="btn btn-success btn-lg w-full" onclick="startAttendance()">📋 QR Code Generate Karo</button>
+      </div>
+
+      <!-- Live QR -->
+      <div id="attLive" style="display:none">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;align-items:start">
+          <div class="card">
+            <div style="font-weight:800;font-size:1rem;margin-bottom:16px;text-align:center">📱 Students se scan karwao</div>
+            <div class="qr-wrap">
+              <div class="qr-box">
+                <img id="qrImage" src="" alt="QR Code">
+              </div>
+              <div class="att-url" id="attUrl" onclick="copyAttUrl()">Click to copy URL</div>
+              <div class="qr-code-text" id="qrCodeText"></div>
+            </div>
+            <button class="btn btn-danger w-full" onclick="closeAttendance()">🔴 Attendance Band Karo</button>
+          </div>
+          <div class="card">
+            <div style="display:flex;flex-direction:column;gap:16px">
+              <div>
+                <div class="att-live-count" id="attLiveCount">0</div>
+                <div class="att-live-label">Students Present</div>
+              </div>
+              <div style="font-weight:800;font-size:.875rem;margin-bottom:8px">Present Students:</div>
+              <div class="att-student-list" id="attStudentList">
+                <div style="text-align:center;color:var(--text3);font-size:.82rem;padding:20px">
+                  Abhi koi nahi — students scan karein
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- History -->
+    <div id="attHistory" style="display:none">
+      <div style="display:flex;justify-content:flex-end;margin-bottom:16px">
+        <button class="btn btn-ghost btn-sm" onclick="loadAttHistory()">🔄 Refresh</button>
+      </div>
+      <div id="attHistoryList" class="att-sessions">
+        <div style="text-align:center;padding:40px;color:var(--text3)">Loading...</div>
+      </div>
+    </div>
+  </div>
 </div>
 
 <!-- FLOATING WIDGET -->
@@ -376,6 +464,7 @@ const socket=io();
 
 function populateSubjects(){
   const subs=user.subjects||[];
+  populateAttSubjects();
   ['lSubject','uSubject'].forEach(id=>{
     const sel=document.getElementById(id);
     sel.innerHTML='<option value="">Subject chuniye</option>';
@@ -387,8 +476,8 @@ function populateSubjects(){
 function switchTab(name,btn){
   document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
   btn.classList.add('active');
-  ['tabStart','tabMyLectures','tabUpload'].forEach(id=>document.getElementById(id).style.display='none');
-  const map={start:'tabStart',myLectures:'tabMyLectures',upload:'tabUpload'};
+  ['tabStart','tabMyLectures','tabUpload','tabAttendance'].forEach(id=>document.getElementById(id).style.display='none');
+  const map={start:'tabStart',myLectures:'tabMyLectures',upload:'tabUpload',attendance:'tabAttendance'};
   document.getElementById(map[name]).style.display='block';
   if(name==='myLectures') loadMyLectures();
 }
@@ -774,6 +863,120 @@ async function uploadPDF(){
   }catch(e){err.textContent=e.message;err.classList.add('show');}
   finally{btn.disabled=false;btn.textContent='⬆️ Upload Karo';}
 }
+
+// ── Attendance ──────────────────────────────────────
+let attSession = null;
+let attStudents = [];
+
+function switchAttTab(name, btn) {
+  document.querySelectorAll('#tabAttendance .tab').forEach(t=>t.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('attTake').style.display = name==='take'?'block':'none';
+  document.getElementById('attHistory').style.display = name==='history'?'block':'none';
+  if (name==='history') loadAttHistory();
+}
+
+function populateAttSubjects() {
+  const sel = document.getElementById('attSubject');
+  sel.innerHTML = '<option value="">Subject chuniye</option>';
+  (user.subjects||[]).forEach(s=>{
+    const o = document.createElement('option');
+    o.value = o.textContent = s;
+    sel.appendChild(o);
+  });
+}
+
+async function startAttendance() {
+  const subject = document.getElementById('attSubject').value;
+  const cls     = document.getElementById('attClass').value.trim();
+  const err     = document.getElementById('attErr');
+  err.classList.remove('show');
+  if (!subject||!cls) { err.textContent='Subject aur class chahiye'; err.classList.add('show'); return; }
+
+  try {
+    const data = await api('POST','/api/attendance/start',{subject,class_name:cls});
+    attSession  = data.session;
+    attStudents = [];
+
+    // Generate QR code using free API
+    const attUrl = `${window.location.origin}/attend/${data.qrCode}`;
+    const qrUrl  = `https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent(attUrl)}`;
+    document.getElementById('qrImage').src = qrUrl;
+    document.getElementById('attUrl').textContent = attUrl;
+    document.getElementById('attUrl').dataset.url = attUrl;
+    document.getElementById('qrCodeText').textContent = `Code: ${data.qrCode}`;
+    document.getElementById('attLiveCount').textContent = '0';
+    document.getElementById('attStudentList').innerHTML =
+      '<div style="text-align:center;color:var(--text3);font-size:.82rem;padding:20px">Abhi koi nahi — students scan karein</div>';
+
+    document.getElementById('attSetup').style.display = 'none';
+    document.getElementById('attLive').style.display  = 'block';
+    toast('QR code ready! Students ko scan karwao','success');
+  } catch(e) { err.textContent=e.message; err.classList.add('show'); }
+}
+
+function copyAttUrl() {
+  const url = document.getElementById('attUrl').dataset.url;
+  navigator.clipboard.writeText(url).then(()=>toast('URL copy ho gayi!','success'));
+}
+
+async function closeAttendance() {
+  if (!attSession) return;
+  if (!confirm(`${attStudents.length} students present hain. Attendance band karein?`)) return;
+  try {
+    await api('POST','/api/attendance/close',{sessionId:attSession.id});
+    attSession = null;
+    document.getElementById('attSetup').style.display = 'block';
+    document.getElementById('attLive').style.display  = 'none';
+    toast('Attendance session band ho gayi!','success');
+  } catch(e) { toast(e.message,'error'); }
+}
+
+async function loadAttHistory() {
+  const container = document.getElementById('attHistoryList');
+  container.innerHTML = '<div style="text-align:center;padding:40px;color:var(--text3)">Loading...</div>';
+  try {
+    const sessions = await api('GET','/api/attendance');
+    if (!sessions.length) {
+      container.innerHTML = '<div style="text-align:center;padding:40px;color:var(--text3)">Koi session nahi abhi</div>';
+      return;
+    }
+    container.innerHTML = sessions.map(s=>`
+      <div class="att-session-card">
+        <div class="asc-left">
+          <div class="asc-title">${s.subject} · ${s.class_name}</div>
+          <div class="asc-meta">${fmtDate(s.created_at)} · ${s.student_count} students</div>
+        </div>
+        <div class="asc-right">
+          <span class="badge ${s.status==='open'?'badge-live':'badge-done'}">${s.status==='open'?'OPEN':'CLOSED'}</span>
+          <button class="btn btn-primary btn-xs" onclick="viewAttendance('${s.id}')">📋 List</button>
+        </div>
+      </div>
+    `).join('');
+  } catch(e) { container.innerHTML = `<div style="text-align:center;padding:40px;color:var(--red)">${e.message}</div>`; }
+}
+
+async function viewAttendance(sessionId) {
+  try {
+    const data = await api('GET',`/api/attendance/${sessionId}`);
+    const names = data.records.map(r=>r.student_name).join(', ') || 'Koi nahi';
+    alert(`${data.session.subject} · ${data.session.class_name}\n${data.count} Students Present:\n\n${names}`);
+  } catch(e) { toast(e.message,'error'); }
+}
+
+// Socket: attendance marked
+socket.on('attendance:marked',({sessionId,studentName,count})=>{
+  if (!attSession||attSession.id!==sessionId) return;
+  attStudents.push(studentName);
+  document.getElementById('attLiveCount').textContent = count;
+  const list = document.getElementById('attStudentList');
+  if (list.querySelector('div[style]')) list.innerHTML='';
+  const item = document.createElement('div');
+  item.className = 'att-student-item';
+  item.innerHTML = `<span class="asi-name">✅ ${studentName}</span><span class="asi-time">${new Date().toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'})}</span>`;
+  list.prepend(item);
+  toast(`${studentName} present!`,'success');
+});
 
 // ── Keyboard & Socket ───────────────────────────────
 document.addEventListener('keydown',e=>{

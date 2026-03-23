@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
+<title>Attendance — ShikshaLabs</title>
+<link rel="stylesheet" href="/css/style.css">
+<style>
+*{-webkit-tap-highlight-color:transparent}
+body{display:flex;flex-direction:column;min-height:100vh;align-items:center;justify-content:center;padding:24px;position:relative;overflow:hidden}
+.orb1{width:300px;height:300px;background:#22c55e;top:-100px;right:-100px}
+.orb2{width:200px;height:200px;background:#4f7cff;bottom:-60px;left:-60px}
+
+.card{position:relative;z-index:1;width:100%;max-width:400px;background:var(--surface);border:1px solid var(--border2);border-radius:24px;padding:36px 28px;text-align:center;box-shadow:var(--shadow-lg)}
+
+/* Loading */
+#loadingState .load-icon{font-size:3rem;margin-bottom:16px;animation:spin 1s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* Login needed */
+#loginState .li-icon{font-size:3rem;margin-bottom:16px}
+
+/* Success */
+#successState .su-icon{font-size:4rem;margin-bottom:16px;animation:pop .4s cubic-bezier(.34,1.56,.64,1)}
+@keyframes pop{from{transform:scale(0)}to{transform:scale(1)}}
+.su-name{font-size:1.2rem;font-weight:800;margin-bottom:8px}
+.su-detail{font-size:.875rem;color:var(--text2);line-height:1.6;margin-bottom:24px}
+.su-time{font-family:'JetBrains Mono',monospace;font-size:.75rem;color:var(--text3);background:var(--surface2);border-radius:8px;padding:8px 16px;display:inline-block;margin-bottom:20px}
+
+/* Error */
+#errorState .er-icon{font-size:3rem;margin-bottom:16px}
+
+/* Already marked */
+#alreadyState .al-icon{font-size:3rem;margin-bottom:16px}
+
+.state-title{font-size:1.3rem;font-weight:900;margin-bottom:8px}
+.state-sub{font-size:.875rem;color:var(--text2);line-height:1.6;margin-bottom:24px}
+
+.session-info{background:var(--surface2);border-radius:12px;padding:16px;margin-bottom:24px;text-align:left}
+.si-row{display:flex;justify-content:space-between;align-items:center;font-size:.82rem;margin-bottom:6px}
+.si-row:last-child{margin-bottom:0}
+.si-label{color:var(--text3);font-family:'JetBrains Mono',monospace;font-size:.7rem;text-transform:uppercase}
+.si-value{font-weight:700;color:var(--text)}
+
+.logo{font-weight:900;font-size:1rem;letter-spacing:-0.5px;background:linear-gradient(135deg,var(--accent),var(--cyan));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;margin-bottom:24px;display:block}
+</style>
+</head>
+<body>
+<div class="orb orb1"></div>
+<div class="orb orb2"></div>
+
+<div class="card">
+  <span class="logo">ShikshaLabs</span>
+
+  <!-- Loading -->
+  <div id="loadingState">
+    <div class="load-icon">⏳</div>
+    <div class="state-title">Verifying...</div>
+    <div class="state-sub">Ek second — attendance session check ho raha hai</div>
+  </div>
+
+  <!-- Login needed -->
+  <div id="loginState" style="display:none">
+    <div class="li-icon">🔐</div>
+    <div class="state-title">Login Karo</div>
+    <div class="state-sub">Attendance mark karne ke liye apne student account se login karo.</div>
+    <button class="btn btn-primary btn-lg w-full" onclick="goLogin()">Login Karo →</button>
+  </div>
+
+  <!-- Session info + Mark button -->
+  <div id="markState" style="display:none">
+    <div style="font-size:2.5rem;margin-bottom:16px">✅</div>
+    <div class="state-title">Attendance Do</div>
+    <div class="session-info" id="sessionInfoBox"></div>
+    <button class="btn btn-success btn-lg w-full" id="markBtn" onclick="markAttendance()">
+      ✅ Attendance Mark Karo
+    </button>
+    <p style="font-size:.72rem;color:var(--text3);margin-top:12px;font-family:'JetBrains Mono',monospace">
+      Same WiFi verification ho rahi hai
+    </p>
+  </div>
+
+  <!-- Success -->
+  <div id="successState" style="display:none">
+    <div class="su-icon">🎉</div>
+    <div class="su-name" id="successName">—</div>
+    <div class="su-detail" id="successDetail">—</div>
+    <div class="su-time" id="successTime">—</div>
+    <div style="font-size:.82rem;color:var(--text2)">Aap band kar sakte hain yeh page</div>
+  </div>
+
+  <!-- Already marked -->
+  <div id="alreadyState" style="display:none">
+    <div class="al-icon">👍</div>
+    <div class="state-title">Already Present!</div>
+    <div class="state-sub">Aapki attendance pehle se mark ho chuki hai is session mein.</div>
+    <button class="btn btn-ghost w-full" onclick="window.close()">Band Karo</button>
+  </div>
+
+  <!-- Error -->
+  <div id="errorState" style="display:none">
+    <div class="er-icon">❌</div>
+    <div class="state-title" id="errorTitle">Kuch Gadbad Hui</div>
+    <div class="state-sub" id="errorMsg">Session expire ho gayi ya galat QR scan kiya.</div>
+    <button class="btn btn-ghost w-full" onclick="window.history.back()">Wapas Jao</button>
+  </div>
+</div>
+
+<div id="toast"></div>
+<script src="/js/utils.js"></script>
+<script>
+const qrCode = location.pathname.split('/attend/')[1];
+let sessionData = null;
+
+function show(id) {
+  ['loadingState','loginState','markState','successState','alreadyState','errorState']
+    .forEach(s => document.getElementById(s).style.display = s===id ? 'block' : 'none');
+}
+
+async function init() {
+  if (!qrCode) { showError('Invalid QR Code', 'QR code sahi nahi hai.'); return; }
+
+  // Check login
+  let user = null;
+  try {
+    const data = await api('GET', '/api/auth/me');
+    user = data.user;
+  } catch {
+    // Not logged in
+    sessionStorage.setItem('attend_redirect', location.href);
+    show('loginState');
+    return;
+  }
+
+  if (user.role !== 'student') {
+    showError('Student Account Chahiye', 'Sirf students attendance mark kar sakte hain.');
+    return;
+  }
+
+  // Find session by QR
+  try {
+    const res = await fetch(`/api/attendance/active/check`, { credentials: 'include' });
+    const sessions = await res.json();
+    const session = sessions.find(s => s.qr_code === qrCode);
+
+    if (!session) {
+      showError('Session Nahi Mili', 'QR code expire ho gaya ya teacher ne session band kar diya.');
+      return;
+    }
+
+    sessionData = session;
+
+    // Show mark state
+    document.getElementById('sessionInfoBox').innerHTML = `
+      <div class="si-row">
+        <span class="si-label">Subject</span>
+        <span class="si-value">${session.subject}</span>
+      </div>
+      <div class="si-row">
+        <span class="si-label">Class</span>
+        <span class="si-value">${session.class_name}</span>
+      </div>
+      <div class="si-row">
+        <span class="si-label">Teacher</span>
+        <span class="si-value">${session.teacher_name}</span>
+      </div>
+      <div class="si-row">
+        <span class="si-label">Student</span>
+        <span class="si-value">${user.name}</span>
+      </div>
+    `;
+    show('markState');
+  } catch(e) {
+    showError('Server Error', e.message);
+  }
+}
+
+async function markAttendance() {
+  const btn = document.getElementById('markBtn');
+  btn.disabled = true;
+  btn.textContent = 'Mark ho raha hai...';
+
+  try {
+    const res = await fetch(`/api/attendance/mark/${qrCode}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify({ studentIp: '' })
+    });
+    const data = await res.json();
+
+    if (res.status === 409) { show('alreadyState'); return; }
+    if (!res.ok) throw new Error(data.error);
+
+    // Success!
+    const userData = await api('GET', '/api/auth/me');
+    document.getElementById('successName').textContent = `${userData.user.name} ✓`;
+    document.getElementById('successDetail').textContent =
+      `${sessionData.subject} · ${sessionData.class_name} · ${sessionData.teacher_name}`;
+    document.getElementById('successTime').textContent =
+      new Date().toLocaleTimeString('en-IN', {hour:'2-digit',minute:'2-digit',second:'2-digit'});
+    show('successState');
+  } catch(e) {
+    btn.disabled = false;
+    btn.textContent = '✅ Attendance Mark Karo';
+    toast(e.message, 'error');
+  }
+}
+
+function showError(title, msg) {
+  document.getElementById('errorTitle').textContent = title;
+  document.getElementById('errorMsg').textContent = msg;
+  show('errorState');
+}
+
+function goLogin() {
+  window.location.href = `/login?redirect=${encodeURIComponent(location.href)}`;
+}
+
+init();
+</script>
+</body>
+</html>
