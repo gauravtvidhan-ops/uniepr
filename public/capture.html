@@ -11,7 +11,6 @@ body{display:flex;flex-direction:column;min-height:100vh;overflow:hidden;positio
 .orb1{width:300px;height:300px;background:#4f7cff;top:-100px;left:-100px}
 .orb2{width:200px;height:200px;background:#22c55e;bottom:-60px;right:-60px}
 
-/* Code Entry Screen */
 #codeScreen{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:32px;position:relative;z-index:1;text-align:center}
 .code-logo{font-weight:900;font-size:1.8rem;letter-spacing:-1px;background:linear-gradient(135deg,var(--accent),var(--cyan));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;margin-bottom:8px}
 .code-sub{font-size:.8rem;color:var(--text2);margin-bottom:36px;font-family:'JetBrains Mono',monospace;letter-spacing:1px}
@@ -40,12 +39,10 @@ body{display:flex;flex-direction:column;min-height:100vh;overflow:hidden;positio
 .btn-join:active{transform:scale(.97)}
 .code-err{color:var(--red);font-size:.82rem;margin-top:12px;min-height:20px;font-weight:600}
 
-/* Top bar */
 .top-bar{padding:16px 20px;display:flex;align-items:center;justify-content:space-between;background:var(--surface);border-bottom:1px solid var(--border);position:relative;z-index:1}
 .top-logo{font-weight:900;font-size:1rem;letter-spacing:-0.5px;background:linear-gradient(135deg,var(--accent),var(--cyan));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
 .top-code{font-family:'JetBrains Mono',monospace;font-size:.75rem;color:var(--text2);background:var(--surface2);border:1px solid var(--border2);border-radius:6px;padding:4px 10px;letter-spacing:2px}
 
-/* Capture Screen */
 #captureScreen{flex:1;display:none;flex-direction:column;align-items:center;justify-content:space-between;padding:24px 20px;position:relative;z-index:1}
 
 .lecture-info{text-align:center;width:100%}
@@ -60,7 +57,6 @@ body{display:flex;flex-direction:column;min-height:100vh;overflow:hidden;positio
 .fw-stat .v{font-family:'JetBrains Mono',monospace;font-size:1.8rem;font-weight:700;color:var(--accent)}
 .fw-stat .l{font-size:.65rem;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;margin-top:4px}
 
-/* BIG CAPTURE BUTTON */
 .capture-wrap{width:100%;position:relative}
 .btn-capture-big{
   width:100%;padding:28px;
@@ -93,7 +89,6 @@ body{display:flex;flex-direction:column;min-height:100vh;overflow:hidden;positio
 <div class="orb orb1"></div>
 <div class="orb orb2"></div>
 
-<!-- TOP BAR -->
 <div class="top-bar">
   <span class="top-logo">UniEPR</span>
   <span class="top-code" id="topCode" style="display:none">●●●●●●</span>
@@ -104,11 +99,11 @@ body{display:flex;flex-direction:column;min-height:100vh;overflow:hidden;positio
   <div class="code-logo">📸 Capture</div>
   <div class="code-sub">UNIEPR LECTURE REMOTE</div>
   <div class="code-input-wrap">
-    <input type="text" id="codeInput" maxlength="6" placeholder="ABC123" 
+    <input type="text" id="codeInput" maxlength="6" placeholder="ABC123"
       oninput="this.value=this.value.toUpperCase()"
       onkeydown="if(event.key==='Enter') joinLecture()">
   </div>
-  <div class="code-hint">Teacher se 6-digit code lo</div>
+  <div class="code-hint">Get the 6-digit code from your teacher</div>
   <button class="btn-join" onclick="joinLecture()">Join Lecture →</button>
   <div class="code-err" id="codeErr"></div>
 </div>
@@ -139,14 +134,14 @@ body{display:flex;flex-direction:column;min-height:100vh;overflow:hidden;positio
   </div>
 
   <div style="width:100%;display:flex;flex-direction:column;gap:12px">
-    <div class="last-capture" id="lastCapture">Capture button dabao jab slide complete ho</div>
+    <div class="last-capture" id="lastCapture">Press Capture when the slide is complete</div>
     <div class="capture-wrap">
       <button class="btn-capture-big" id="captureBtn" onclick="triggerCapture(event)">
         <span class="ic">📸</span>
         <span id="captureBtnText">Capture Slide</span>
       </button>
     </div>
-    <button class="btn-leave" onclick="leaveLecture()">← Lecture Chhodna</button>
+    <button class="btn-leave" onclick="leaveLecture()">← Leave Lecture</button>
   </div>
 </div>
 
@@ -161,7 +156,6 @@ let timerInterval = null;
 let currentCode = null;
 const socket = io();
 
-// Check if URL has code: /c/ABC123
 (async () => {
   const pathCode = location.pathname.match(/\/c\/([A-Z0-9]{6})/i);
   if (pathCode) {
@@ -175,7 +169,7 @@ async function joinLecture() {
   const err  = document.getElementById('codeErr');
   err.textContent = '';
 
-  if (code.length !== 6) { err.textContent = '6-digit code daalo'; return; }
+  if (code.length !== 6) { err.textContent = 'Please enter a 6-digit code'; return; }
 
   try {
     const data = await fetch(`/api/capture-code/${code}`).then(r => r.json());
@@ -190,16 +184,10 @@ async function joinLecture() {
     document.getElementById('codeScreen').style.display    = 'none';
     document.getElementById('captureScreen').style.display = 'flex';
 
-    // Try to get lecture info
-    try {
-      const res = await fetch('/api/lecture/active', { credentials: 'include' });
-      // May fail if not logged in — that's ok, we just won't show details
-    } catch {}
-
     startTimer();
-    toast('Lecture join ho gaya! Capture karo 📸', 'success');
+    toast('Joined lecture successfully! Start capturing 📸', 'success');
   } catch(e) {
-    err.textContent = 'Code galat hai ya expire ho gaya';
+    err.textContent = 'Invalid or expired code';
   }
 }
 
@@ -217,7 +205,6 @@ function pad(n) { return String(n).padStart(2,'0'); }
 async function triggerCapture(e) {
   if (!currentCode) return;
 
-  // Ripple
   const btn = document.getElementById('captureBtn');
   const rect = btn.getBoundingClientRect();
   const ripple = document.createElement('div');
@@ -227,7 +214,6 @@ async function triggerCapture(e) {
   btn.appendChild(ripple);
   setTimeout(() => ripple.remove(), 600);
 
-  // Button feedback
   btn.classList.add('success');
   document.getElementById('captureBtnText').textContent = '✓ Captured!';
   setTimeout(() => {
@@ -245,7 +231,7 @@ async function triggerCapture(e) {
       `Slide ${slideCount} — ${new Date().toLocaleTimeString('en-IN', {hour:'2-digit',minute:'2-digit',second:'2-digit'})}`;
     updateDots();
   } catch(e) {
-    toast('Capture fail — internet check karo', 'error');
+    toast('Capture failed — please check your internet connection', 'error');
   }
 }
 
@@ -274,11 +260,10 @@ function leaveLecture() {
   document.getElementById('slideDots').innerHTML = '';
 }
 
-// Socket: lecture ended
 socket.on('lecture:ended', ({ lectureId: endedId }) => {
   if (endedId === lectureId) {
     clearInterval(timerInterval);
-    toast('Lecture khatam ho gayi! PDF students ko mil gayi.', 'success');
+    toast('Lecture ended! PDF has been delivered to students.', 'success');
     setTimeout(() => leaveLecture(), 2000);
   }
 });
